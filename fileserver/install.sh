@@ -25,6 +25,7 @@ pacman -Syu --noconfirm \
     base-devel \
     cmake \
     git \
+    mdadm \
     netctl \
     python \
     python-pip \
