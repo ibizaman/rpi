@@ -19,6 +19,9 @@ tmp_dir=$(cd_tmpdir)
 cd "$tmp_dir" || exit 1
 
 device=$(require_device "$1")
+if [ -z "$device" ]; then
+    exit 1
+fi
 
 
 # Downloading Arch if needed
