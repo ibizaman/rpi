@@ -1,16 +1,5 @@
 #!/bin/bash
 
-# Needs:
-#   pacaur -S \
-#       curl \
-#       fdisk \
-#       pv \
-#       arch-install-scripts \
-#       binfmt-support \
-#       qemu-user-static \
-#
-# See https://wiki.archlinux.org/index.php/Raspberry_Pi#QEMU_chroot
-
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=./util.sh disable=SC1091
 source "$DIR/util.sh"
