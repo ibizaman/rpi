@@ -22,15 +22,25 @@ device=$(require_device "$1")
 if [ -z "$device" ]; then
     exit 1
 fi
+model=$(require_model)
+if [ -z "$model" ]; then
+    exit 1
+fi
 netctl_profile=$(require_network_profile)
 if [ -z "$netctl_profile" ]; then
     exit 1
 fi
 
+if [ "$model" = "rpi" ]; then
+    filename='ArchLinuxARM-rpi-latest.tar.gz'
+elif [ "$model" = "rpi2" ]; then
+    filename='ArchLinuxARM-rpi-2-latest.tar.gz'
+fi
+
 
 # Downloading Arch if needed
 echo "Checking if we need to download the latest ArchLinuxARM iso"
-curl --silent --location --output new-md5 'http://os.archlinuxarm.org/os/ArchLinuxARM-rpi-latest.tar.gz.md5' || exit 1
+curl --silent --location --output "new-md5-$model" "http://os.archlinuxarm.org/os/$filename.md5"
 current_md5="$(md5sum "$filename")"
 
 echo "Newest md5:" "$(cat "new-md5-$model")"
@@ -38,7 +48,7 @@ echo "Current md5:" "$current_md5"
 
 if [ "$(cat "new-md5-$model")" != "$current_md5" ]; then
     echo "We do, downloading in the background..."
-    ( (curl --silent --location --remote-name 'http://os.archlinuxarm.org/os/ArchLinuxARM-rpi-latest.tar.gz') && mv new-md5 current-md5 && echo "Download done." || echo "Failed to download.")&
+    ( (curl --silent --location --remote-name "http://os.archlinuxarm.org/os/$filename") && mv new-md5 current-md5 && echo "Download done." || echo "Failed to download.")&
     process=$!
 else
     echo "We don't, continuing"
@@ -85,9 +95,10 @@ mount_device "$tmp_dir" "$device"
 
 # Copying Arch
 echo 'Untaring into root.'
-sudo sh -c 'pv ArchLinuxARM-rpi-latest.tar.gz | bsdtar -xpf - -C root' || exit 1
-sync || exit 1
+sudo sh -c "pv $filename | bsdtar -xpf - -C root" || exit 1
 sudo mv root/boot/* boot || exit 1
+echo 'sync'
+sync || exit 1
 
 
 # Allow to chroot

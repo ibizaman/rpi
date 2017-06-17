@@ -14,6 +14,10 @@ function require_device() {
     echo "/dev/$device"
 }
 
+function require_model() {
+    echo $(echo -e 'rpi\nrpi2' | fzf --reverse --header='Pick the rpi model')
+}
+
 function require_network_profile() {
     echo $(find /etc/netctl -maxdepth 1 -type f -printf %f\\n | sort | fzf --reverse --header='Pick the network profile')
 }
