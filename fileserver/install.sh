@@ -42,8 +42,9 @@ chmod -R go-rwx /home/alarm/.ssh
 
 su - alarm
 
-git clone https://github.com/ibizaman/conffiles.git .vim || exit 1
-./.vim/install.sh
+if git clone https://github.com/ibizaman/conffiles.git .vim; then
+    ./.vim/install.sh
+fi
 HERE
 
 umount_device "$tmp_dir" "$device"
