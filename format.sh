@@ -31,8 +31,12 @@ fi
 # Downloading Arch if needed
 echo "Checking if we need to download the latest ArchLinuxARM iso"
 curl --silent --location --output new-md5 'http://os.archlinuxarm.org/os/ArchLinuxARM-rpi-latest.tar.gz.md5' || exit 1
+current_md5="$(md5sum "$filename")"
 
-if [ ! -f current-md5 ] || [ "$(cat current-md5)" != "$(cat new-md5)" ] || [ "$(cat current-md5)" != "$(md5sum ArchLinuxARM-rpi-latest.tar.gz)" ]; then
+echo "Newest md5:" "$(cat "new-md5-$model")"
+echo "Current md5:" "$current_md5"
+
+if [ "$(cat "new-md5-$model")" != "$current_md5" ]; then
     echo "We do, downloading in the background..."
     ( (curl --silent --location --remote-name 'http://os.archlinuxarm.org/os/ArchLinuxARM-rpi-latest.tar.gz') && mv new-md5 current-md5 && echo "Download done." || echo "Failed to download.")&
     process=$!
