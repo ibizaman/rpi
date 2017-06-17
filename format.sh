@@ -22,6 +22,10 @@ device=$(require_device "$1")
 if [ -z "$device" ]; then
     exit 1
 fi
+netctl_profile=$(require_network_profile)
+if [ -z "$netctl_profile" ]; then
+    exit 1
+fi
 
 
 # Downloading Arch if needed
@@ -87,7 +91,6 @@ sudo cp /usr/bin/qemu-arm-static /usr/bin/qemu-aarch64-static "$tmp_dir/root/usr
 
 
 # Copy network profile
-netctl_profile=$(find /etc/netctl -maxdepth 1 -type f -printf %f\\n | sort | fzf)
 sudo sh -c "cp /etc/netctl/$netctl_profile $tmp_dir/root/etc/netctl/$netctl_profile" || exit 1
 
 sudo arch-chroot "$tmp_dir/root" /bin/bash <<HERE
