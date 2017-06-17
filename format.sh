@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Needs:
 #   pacaur -S \
@@ -12,10 +12,11 @@
 # See https://wiki.archlinux.org/index.php/Raspberry_Pi#QEMU_chroot
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# shellcheck source=./util.sh disable=SC1091
 source "$DIR/util.sh"
 
 tmp_dir=$(cd_tmpdir)
-cd "$tmp_dir"
+cd "$tmp_dir" || exit 1
 
 device=$(require_device "$1")
 
@@ -26,7 +27,7 @@ curl --silent --location --output new-md5 'http://os.archlinuxarm.org/os/ArchLin
 
 if [ ! -f current-md5 ] || [ "$(cat current-md5)" != "$(cat new-md5)" ] || [ "$(cat current-md5)" != "$(md5sum ArchLinuxARM-rpi-latest.tar.gz)" ]; then
     echo "We do, downloading in the background..."
-    ((curl --silent --location --remote-name 'http://os.archlinuxarm.org/os/ArchLinuxARM-rpi-latest.tar.gz') && mv new-md5 current-md5 && echo "Download done." || echo "Failed to download.")&
+    ( (curl --silent --location --remote-name 'http://os.archlinuxarm.org/os/ArchLinuxARM-rpi-latest.tar.gz') && mv new-md5 current-md5 && echo "Download done." || echo "Failed to download.")&
     process=$!
 else
     echo "We don't, continuing"
