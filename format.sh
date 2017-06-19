@@ -94,11 +94,12 @@ sync || exit 1
 sudo cp /usr/bin/qemu-arm-static /usr/bin/qemu-aarch64-static "$tmp_dir/root/usr/bin" || exit 1
 
 
-# Copy network profile
+# Copy network profile and change interface to wlan0
 sudo sh -c "cp /etc/netctl/$netctl_profile $tmp_dir/root/etc/netctl/$netctl_profile" || exit 1
 
 sudo arch-chroot "$tmp_dir/root" /bin/bash <<HERE
-netctl enable $netctl_profile
+sed -i -e 's/Interface=.*$/Interface=wlan0/' "/etc/netctl/$netctl_profile"
+netctl enable $netctl_profile 2>/dev/null
 HERE
 
 
