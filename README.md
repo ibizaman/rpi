@@ -15,3 +15,9 @@ RPI and install a network profile for netctl.
 `make fileserver` for now installs my
 [`conffiles`](https://github.com/ibizaman/conffiles) and a few other
 packages.
+
+`make mount` and `make umount` are helper targets to respectively mount
+and unmount the boot and root directories.
+
+`make chroot` is a helper target to chroot into the sdcard. The boot and
+root partitions will be automatically mounted and unmounted.

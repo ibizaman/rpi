@@ -21,5 +21,17 @@ format:  ## Format rpi
 	./format.sh
 
 
+mount:  ## Manual mount
+	./mount.sh
+
+
+chroot:  ## Chroot into rpi
+	./chroot.sh
+
+
+umount:  ## Manual unmount
+	./umount.sh
+
+
 fileserver:  ## Make a fileserver of the rpi, first run format target
 	./fileserver/install.sh
