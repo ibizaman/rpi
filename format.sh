@@ -111,6 +111,8 @@ pushd /etc/modprobe.d
 curl -O https://raw.githubusercontent.com/pvaret/rtl8192cu-fixes/17350bfa80bdc97fec5db0e760d13d8ed8c523bb/8192cu-disable-power-management.conf
 popd
 HERE
+echo 'sync'
+sync || exit 1
 
 
 # Done
