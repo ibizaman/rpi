@@ -95,10 +95,15 @@ sync || exit 1
 sudo cp /usr/bin/qemu-arm-static /usr/bin/qemu-aarch64-static "$tmp_dir/root/usr/bin" || exit 1
 
 
-# Copy network profile and change interface to wlan0
+# Copy network profile, interface change to wlan0 is done later
 sudo sh -c "cp /etc/netctl/$netctl_profile $tmp_dir/root/etc/netctl/$netctl_profile" || exit 1
 
 sudo arch-chroot "$tmp_dir/root" /bin/bash <<HERE
+# Avoid getting the following message on upgrade of linux-raspberrypi
+#   WARNING: /boot appears to be a seperate partition but is not mounted.
+#            You probably just broke your system. Congratulations.
+mount boot
+pacman -Syu --noconfirm
 sed -i -e 's/Interface=.*$/Interface=wlan0/' "/etc/netctl/$netctl_profile"
 netctl enable $netctl_profile 2>/dev/null
 HERE
