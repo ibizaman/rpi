@@ -106,6 +106,10 @@ mount boot
 pacman -Syu --noconfirm
 sed -i -e 's/Interface=.*$/Interface=wlan0/' "/etc/netctl/$netctl_profile"
 netctl enable $netctl_profile 2>/dev/null
+
+pushd /etc/modprobe.d
+curl -O https://raw.githubusercontent.com/pvaret/rtl8192cu-fixes/17350bfa80bdc97fec5db0e760d13d8ed8c523bb/8192cu-disable-power-management.conf
+popd
 HERE
 
 
