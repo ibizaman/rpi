@@ -11,6 +11,7 @@ cd "$tmp_dir" || exit 1
 
 device=$(require_device "$1")
 if [ -z "$device" ]; then
+    echo "No device found, aborting."
     exit 1
 fi
 

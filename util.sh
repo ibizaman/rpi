@@ -9,9 +9,13 @@ function cd_tmpdir() {
 function require_device() {
     local device="$1"
     if [ -z "$device" ]; then
-        local device=$(lsblk -rdo NAME | grep mmc | fzf --reverse --header='Pick the device')
+        local device=$(lsblk -rdo NAME | grep mmc | fzf --reverse --header='Pick the device' --exit-0)
     fi
-    echo "/dev/$device"
+    if [ -z "$device" ]; then
+        echo ""
+    else
+        echo "/dev/$device"
+    fi
 }
 
 function require_model() {
