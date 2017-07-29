@@ -28,11 +28,11 @@ function umount_device() {
 
     if mount | grep "$tmp_dir/boot" > /dev/null || mount | grep "${device}p1" > /dev/null; then
         echo "Unmounting mounted boot."
-        sudo umount "$tmp_dir/boot" || exit 1
+        sudo umount "${device}p1" || exit 1
     fi
     if mount | grep "$tmp_dir/root" > /dev/null || mount | grep "${device}p2" > /dev/null; then
         echo "Unmounting mounted root."
-        sudo umount "$tmp_dir/root" || exit 1
+        sudo umount "${device}p2" || exit 1
     fi
 }
 
