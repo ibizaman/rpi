@@ -29,6 +29,7 @@ sudo arch-chroot "$tmp_dir/root" /bin/bash <<HERE
 pacman -Syu --noconfirm \
     base-devel \
     cmake \
+    fcron \
     git \
     mdadm \
     netctl \
@@ -37,6 +38,7 @@ pacman -Syu --noconfirm \
     python2 \
     python2-pip \
     sudo \
+    tmux \
     vim \
     || exit 1
 
@@ -44,6 +46,12 @@ echo '%wheel ALL = (ALL) ALL' >> /etc/sudoers
 
 chown -R alarm: /home/alarm/.ssh
 chmod -R go-rwx /home/alarm/.ssh
+
+systemctl start fcron
+
+echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
+locale-gen
+localectl set-locale LANG=en_US.UTF-8
 
 su - alarm
 
