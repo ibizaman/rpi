@@ -38,7 +38,7 @@ echo "Current md5:" "$current_md5"
 
 if [ "$(cat "new-md5-$model")" != "$current_md5" ]; then
     echo "We do, downloading in the background..."
-    ( (curl --silent --location --remote-name "http://os.archlinuxarm.org/os/$filename") && mv new-md5 current-md5 && echo "Download done." || echo "Failed to download.")&
+    ( (curl --silent --location --remote-name "http://os.archlinuxarm.org/os/$filename") && echo "Download done." || echo "Failed to download.")&
     process=$!
 else
     echo "We don't, continuing"
