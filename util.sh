@@ -1,5 +1,5 @@
 function cd_tmpdir() {
-    local tmp_dir=/tmp/rpi/$(basename "$DIR")
+    local tmp_dir=/tmp/rpi/"$1"
 
     mkdir -p "$tmp_dir" || exit 1
 

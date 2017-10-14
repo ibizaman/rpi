@@ -4,10 +4,10 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=./util.sh disable=SC1091
 source "$DIR/util.sh"
 
-tmp_dir=$(cd_tmpdir)
+tmp_dir=$(cd_tmpdir rpi)
 cd "$tmp_dir" || exit 1
 
-device=$(require_device "$1")
+device=$(require_device "$1" "mmc")
 if [ -z "$device" ]; then
     echo "No device found, aborting."
     exit 1
