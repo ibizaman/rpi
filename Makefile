@@ -15,23 +15,3 @@ install-archlinux:  ## Install needed packages on archlinux
 	    arch-install-scripts \
 	    binfmt-support \
 	    qemu-user-static
-
-
-format:  ## Format rpi
-	./format.sh
-
-
-mount:  ## Manual mount
-	./mount.sh
-
-
-chroot:  ## Chroot into rpi
-	./chroot.sh
-
-
-umount:  ## Manual unmount
-	./umount.sh
-
-
-fileserver:  ## Make a fileserver of the rpi, first run format target
-	./fileserver/install.sh
