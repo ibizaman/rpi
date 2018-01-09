@@ -55,11 +55,14 @@ echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
 locale-gen
 localectl set-locale LANG=en_US.UTF-8
 
-su - alarm
 
-if git clone https://github.com/ibizaman/conffiles.git .vim; then
-    ./.vim/install.sh
-fi
+# conffiles
+
+#su - alarm
+#
+#if git clone https://github.com/ibizaman/conffiles.git .vim; then
+#    ./.vim/install.sh
+#fi
 HERE
 
 umount_device "$tmp_dir" "$device"
