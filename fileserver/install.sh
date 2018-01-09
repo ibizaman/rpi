@@ -18,7 +18,6 @@ fi
 umount_device "$tmp_dir" "$device"
 mount_device "$tmp_dir" "$device"
 
-
 # Make github.com known to ssh
 ssh_folder="$tmp_dir/root/home/alarm/.ssh"
 sudo sh -c "mkdir -p $ssh_folder && grep 192.30.255.113 $HOME/.ssh/known_hosts >> $ssh_folder/known_hosts" || exit 1
@@ -26,7 +25,7 @@ sudo sh -c "mkdir -p $ssh_folder && grep 192.30.255.113 $HOME/.ssh/known_hosts >
 
 # Install conffiles
 sudo arch-chroot "$tmp_dir/root" /bin/bash <<HERE
-pacman -Syu --noconfirm \
+pacman -Syu --noconfirm --needed \
     base-devel \
     cmake \
     fcron \
