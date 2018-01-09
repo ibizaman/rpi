@@ -55,6 +55,13 @@ the config file at `/etc/aria2/aria2.conf`.
 Also installs https://github.com/ziahamza/webui-aria2 whose web interface is
 accessible on port `8888` and json-rpc server on port `6800`.
 
+### universalmediaserver.sh
+
+Installs http://www.universalmediaserver.com as a global systemctl service
+running as user `ums`. Uses native to RPI `ffmpeb` binary.
+
+## Miscellaneous
+
 `./mount` and `./umount` are helper targets to respectively mount and unmount
 the boot and root directories.
 
