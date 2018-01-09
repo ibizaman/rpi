@@ -32,10 +32,28 @@ Then it will proceed to:
 * and finally chroot in the RPI and update the packages through pacman.
 
 
-## Miscellaneous
+## fileserver/
 
-`./fileserver/install.sh` for now installs my
-[`conffiles`](https://github.com/ibizaman/conffiles) and a few other packages.
+Scripts in this folder are targeted for a file server type RPI. Unless otherwise
+noted, those scripts has no dependency on each other.
+
+### install.sh
+
+Install various base packages like fcron, git, mdadm, python2 and 3, tmux, sudo
+and vim.
+
+Also, makes github.com a known ssh host.
+
+Finally, enables fcron and sets and generates the =en_US.UTF-8= locale.
+
+### aria2.sh
+
+Installs https://github.com/ziahamza/webui-aria2 as a global systemctl service
+running as user `aria2`. A random rpc-secret token is generated and inserted in
+the config file at `/etc/aria2/aria2.conf`.
+
+Also installs https://github.com/ziahamza/webui-aria2 whose web interface is
+accessible on port `8888` and json-rpc server on port `6800`.
 
 `./mount` and `./umount` are helper targets to respectively mount and unmount
 the boot and root directories.
