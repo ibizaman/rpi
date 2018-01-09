@@ -47,6 +47,7 @@ chown -R alarm: /home/alarm/.ssh
 chmod -R go-rwx /home/alarm/.ssh
 
 systemctl start fcron
+systemctl enable fcron
 
 echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
 locale-gen
