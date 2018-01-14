@@ -7,19 +7,42 @@ source "$DIR/util.sh"
 tmp_dir=$(cd_tmpdir rpi)
 cd "$tmp_dir" || exit 1
 
-device=$(require_device "$1" "mmc")
-if [ -z "$device" ]; then
-    echo "No device found, aborting."
+contains() {
+    [[ $1 =~ (^|[[:space:]])$2($|[[:space:]]) ]]
+}
+
+device="$1"
+available_devices=$(lsblk -rdo NAME | grep mmc)
+if [ -z "$device" ] || ! contains "$available_devices" "$device"; then
+    echo "$0 DEVICE RPI_MODEL NETWORK_PROFILE"
+    echo "DEVICE must be one of:"
+    echo "$available_devices"
     exit 1
 fi
-model=$(require_model)
-if [ -z "$model" ]; then
+device=/dev/"$device"
+device_boot=${device}p1
+device_root=${device}p2
+shift
+
+model="$1"
+available_models=$(echo -e "rpi\nrpi2")
+if [ -z "$model" ] || ! contains "$available_models" "$model"; then
+    echo "$0 DEVICE RPI_MODEL NETWORK_PROFILE"
+    echo "MODEL must be one of:"
+    echo "$available_models"
     exit 1
 fi
-netctl_profile=$(require_network_profile)
-if [ -z "$netctl_profile" ]; then
+shift
+
+network_profile="$1"
+available_network_profiles=$(find /etc/netctl -maxdepth 1 -type f -printf '%f\n' | sort)
+if [ -z "$network_profile" ] || ! contains "$available_network_profiles" "$network_profile"; then
+    echo "$0 DEVICE RPI_MODEL NETWORK_PROFILE"
+    echo "NETWORK_PROFILE must be one of:"
+    echo "$available_network_profiles"
     exit 1
 fi
+shift
 
 if [ "$model" = "rpi" ]; then
     filename='ArchLinuxARM-rpi-latest.tar.gz'
@@ -50,7 +73,7 @@ umount_device "$tmp_dir" "$device"
 
 # Partitioning RPI
 echo "Partitioning $device"
-sudo fdisk "$device" << STOP
+sudo fdisk "$device" << STOP || exit 1
 p
 o
 n
@@ -96,7 +119,7 @@ sudo cp /usr/bin/qemu-arm-static /usr/bin/qemu-aarch64-static "$tmp_dir/root/usr
 
 
 # Copy network profile, interface change to wlan0 is done later
-sudo sh -c "cp /etc/netctl/$netctl_profile $tmp_dir/root/etc/netctl/$netctl_profile" || exit 1
+sudo sh -c "cp /etc/netctl/$network_profile $tmp_dir/root/etc/netctl/$network_profile" || exit 1
 
 # Install needed packages for Edimax USB WiFi
 # https://raspberrypi.stackexchange.com/questions/12946/set-up-edimax-ew-7811un-wifi-dongle
