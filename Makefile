@@ -1,4 +1,4 @@
-.PHONY: help install-archlinux format fileserver
+.PHONY: help install-archlinux
 
 
 help:  ## This help

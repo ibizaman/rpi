@@ -62,8 +62,5 @@ running as user `ums`. Uses native to RPI `ffmpeb` binary.
 
 ## Miscellaneous
 
-`./mount` and `./umount` are helper targets to respectively mount and unmount
-the boot and root directories.
-
-`./chroot` is a helper target to chroot into the sdcard. The boot and root
+`./chroot.sh` is a helper script to chroot into the sdcard. The boot and root
 partitions will be automatically mounted and unmounted.
