@@ -37,7 +37,7 @@ Then it will proceed to:
 Scripts in this folder are targeted for a file server type RPI. Unless otherwise
 noted, those scripts has no dependency on each other.
 
-### install.sh
+### base.sh
 
 Install various base packages like fcron, git, mdadm, python2 and 3, tmux, sudo
 and vim.
