@@ -113,6 +113,7 @@ sudo mv root/boot/* boot || exit 1
 echo 'sync'
 sync || exit 1
 
+set -x
 
 # Allow to chroot
 sudo cp /usr/bin/qemu-arm-static /usr/bin/qemu-aarch64-static "$tmp_dir/root/usr/bin" || exit 1
@@ -127,13 +128,26 @@ sudo sh -c "cp /etc/netctl/$network_profile $tmp_dir/root/etc/netctl/$network_pr
 # Do not disable WiFi after inactivity period
 # https://bbs.archlinux.org/viewtopic.php?pid=1512272#p1512272
 sudo arch-chroot "$tmp_dir/root" /bin/bash <<HERE
+set -x
 # Avoid getting the following message on upgrade of linux-raspberrypi
 #   WARNING: /boot appears to be a seperate partition but is not mounted.
 #            You probably just broke your system. Congratulations.
 mount boot
-pacman -Syu --noconfirm
-sed -i -e 's/Interface=.*$/Interface=wlan0/' "/etc/netctl/$netctl_profile"
-netctl enable $netctl_profile 2>/dev/null
+
+
+#################
+# Update system #
+#################
+
+pacman -Syu --noconfirm || exit 1
+
+
+##########################
+# Enable Network Profile #
+##########################
+
+sed -i -e 's/Interface=.*$/Interface=wlan0/' "/etc/netctl/$network_profile"
+netctl enable $network_profile 2>/dev/null
 
 pushd /etc/modprobe.d
 curl -O https://raw.githubusercontent.com/pvaret/rtl8192cu-fixes/17350bfa80bdc97fec5db0e760d13d8ed8c523bb/8192cu-disable-power-management.conf
