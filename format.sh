@@ -7,14 +7,27 @@ source "$DIR/util.sh"
 tmp_dir=$(cd_tmpdir rpi)
 cd "$tmp_dir" || exit 1
 
+
+# Script Arguments
+
+if ! ls ~/.password-store >/dev/null 2>&1; then
+    echo "Could not access ~/.password-store/, please open the pass tomb."
+    exit 1
+fi
+
 contains() {
     [[ $1 =~ (^|[[:space:]])$2($|[[:space:]]) ]]
 }
 
+usage() {
+    echo "$0 DEVICE RPI_MODEL HOST USER NETWORK_PROFILE"
+}
+
+## DEVICE
 device="$1"
 available_devices=$(lsblk -rdo NAME | grep mmc)
 if [ -z "$device" ] || ! contains "$available_devices" "$device"; then
-    echo "$0 DEVICE RPI_MODEL NETWORK_PROFILE"
+    usage
     echo "DEVICE must be one of:"
     echo "$available_devices"
     exit 1
@@ -24,22 +37,13 @@ device_boot=${device}p1
 device_root=${device}p2
 shift
 
+## MODEL
 model="$1"
 available_models=$(echo -e "rpi\nrpi2")
 if [ -z "$model" ] || ! contains "$available_models" "$model"; then
-    echo "$0 DEVICE RPI_MODEL NETWORK_PROFILE"
+    usage
     echo "MODEL must be one of:"
     echo "$available_models"
-    exit 1
-fi
-shift
-
-network_profile="$1"
-available_network_profiles=$(find /etc/netctl -maxdepth 1 -type f -printf '%f\n' | sort)
-if [ -z "$network_profile" ] || ! contains "$available_network_profiles" "$network_profile"; then
-    echo "$0 DEVICE RPI_MODEL NETWORK_PROFILE"
-    echo "NETWORK_PROFILE must be one of:"
-    echo "$available_network_profiles"
     exit 1
 fi
 shift
@@ -49,6 +53,80 @@ if [ "$model" = "rpi" ]; then
 elif [ "$model" = "rpi2" ]; then
     filename='ArchLinuxARM-rpi-2-latest.tar.gz'
 fi
+
+## HOST
+host="$1"
+available_hosts="$(ls ~/.password-store/server-passwords)"
+if [ -z "$host" ]; then
+    usage
+    echo "HOST can be one of, or a new one:"
+    echo "$available_hosts"
+    exit 1
+fi
+shift
+
+## USER
+user="$1"
+available_users="$(ls ~/.password-store/server-passwords/"$host" | cut -d '.' -f 1)"
+if [ -z "$user" ]; then
+    usage
+    echo "INSTALL_USER can be one of, or a new one:"
+    echo "$available_users" | grep -v root
+    exit 1
+fi
+shift
+
+## NETWORK_PROFILE
+network_profile="$1"
+available_network_profiles=$(find /etc/netctl -maxdepth 1 -type f -printf '%f\n' | sort)
+if [ -z "$network_profile" ] || ! contains "$available_network_profiles" "$network_profile"; then
+    usage
+    echo "NETWORK_PROFILE must be one of:"
+    echo "$available_network_profiles"
+    exit 1
+fi
+shift
+
+# Fetching or creating user passwords for host stored in pass
+if ! contains "$available_users" "root"; then
+    echo "Generating new root password for $host"
+    root_password="$(pass generate "server-passwords/$host/root" | tail -n1 | xargs -0 echo -n)"
+else
+    root_password="$(pass "server-passwords/$host/root" | xargs -0 echo -n)"
+fi
+
+if ! contains "$available_users" "$user"; then
+    echo -n "Enter $user password for $host:"
+    read -r -s user_password
+    echo -e "$user_password\n$user_password" | pass insert "server-passwords/$host/$user"
+else
+    user_password="$(pass "server-passwords/$host/$user" | xargs -0 echo -n)"
+fi
+
+# Fetching or creating user ssh keys for host with passphrase stored in pass
+private_key="$HOME/.ssh/$host-$user"
+public_key="$private_key.pub"
+
+if ! [ -f "$public_key"  ]; then
+    if [ -f "$private_key"  ]; then
+        echo "A private key exists but no public key, aborting."; exit 1
+    fi
+
+    pass generate "sshkey-passphrase/$host-$user" >/dev/null
+    user_ssh_passphrase="$(pass show "sshkey-passphrase/$host-$user" | xargs -0 echo -n)"
+
+    if [ -z "$user_ssh_passphrase" ]; then
+        echo "Failed to create passphrase, aborting."; exit 1
+    fi
+
+    ssh-keygen -t rsa -b 4096 -f "$private_key" -N "$user_ssh_passphrase" </dev/null || exit 1
+fi
+
+user_ssh_pubkey="$(xargs -0 echo -n < "$public_key")"
+
+[ -z "$root_password" ] && echo "Empty root password" && exit 1
+[ -z "$user_password" ] && echo "Empty user password" && exit 1
+[ -z "$user_ssh_pubkey" ] && echo "Empty ssh passphrase" && exit 1
 
 
 # Downloading Arch if needed
@@ -110,7 +188,7 @@ mount_device "$tmp_dir" "$device"
 echo 'Untaring into root.'
 sudo sh -c "pv $filename | bsdtar -xpf - -C root" || exit 1
 sudo mv root/boot/* boot || exit 1
-echo 'sync'
+echo 'Running sync, can take a few minutes...'
 sync || exit 1
 
 set -x
@@ -152,8 +230,80 @@ netctl enable $network_profile 2>/dev/null
 pushd /etc/modprobe.d
 curl -O https://raw.githubusercontent.com/pvaret/rtl8192cu-fixes/17350bfa80bdc97fec5db0e760d13d8ed8c523bb/8192cu-disable-power-management.conf
 popd
+
+
+###################
+# Generate locale #
+###################
+
+sed -i 's/#\(en_US.UTF-8\)/\1/' /etc/locale.gen
+locale-gen
+echo "LANG=en_US.UTF-8" > /etc/locale.conf
+
+
+##################
+# Store hostname #
+##################
+
+echo "$host" > /etc/hostname
+grep -q -F "127.0.0.1	$host.localdomain	$host" /etc/hosts || echo -e "127.0.0.1\t$host.localdomain\t$host" >> /etc/hosts
+
+
+#################
+# Root password #
+#################
+
+passwd <<PASSWD
+${root_password}
+${root_password}
+PASSWD
+
+
+#####################################
+# Sshd without password connections #
+#####################################
+
+pacman --noconfirm --needed -S openssh
+sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
+systemctl enable sshd
+
+
+###########################
+# Add user to wheel group #
+###########################
+
+useradd -m -G wheel ${USER}
+passwd ${user} <<PASSWD
+${user_password}
+${user_password}
+PASSWD
+
+
+##############################
+# Add wheel group to sudoers #
+##############################
+
+pacman --noconfirm --needed -S sudo
+sed -i 's/# \(%wheel ALL=(ALL) ALL\)/\1/' /etc/sudoers
+
+
+#######################
+# Allow remote access #
+#######################
+
+su ${user} << USER
+set -x
+
+mkdir -p ~/.ssh
+chmod 700 ~/.ssh
+grep -q -F "${user_ssh_pubkey}" ~/.ssh/authorized_keys || echo ${user_ssh_pubkey} >> ~/.ssh/authorized_keys
+chmod 600 ~/.ssh/authorized_keys
+
+USER
+
 HERE
-echo 'sync'
+
+echo 'Running sync, this time should be quick...'
 sync || exit 1
 
 
