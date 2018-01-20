@@ -15,7 +15,6 @@ function run() {
         python-pip \
         python2 \
         python2-pip \
-        sudo \
         tmux \
         vim \
         || exit 1
