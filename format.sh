@@ -200,11 +200,6 @@ sudo cp /usr/bin/qemu-arm-static /usr/bin/qemu-aarch64-static "$tmp_dir/root/usr
 # Copy network profile, interface change to wlan0 is done later
 sudo sh -c "cp /etc/netctl/$network_profile $tmp_dir/root/etc/netctl/$network_profile" || exit 1
 
-# Install needed packages for Edimax USB WiFi
-# https://raspberrypi.stackexchange.com/questions/12946/set-up-edimax-ew-7811un-wifi-dongle
-# https://www.raspberrypi.org/forums/viewtopic.php?t=146592&p=971726
-# Do not disable WiFi after inactivity period
-# https://bbs.archlinux.org/viewtopic.php?pid=1512272#p1512272
 sudo arch-chroot "$tmp_dir/root" /bin/bash <<HERE
 set -x
 # Avoid getting the following message on upgrade of linux-raspberrypi
@@ -300,6 +295,17 @@ grep -q -F "${user_ssh_pubkey}" ~/.ssh/authorized_keys || echo ${user_ssh_pubkey
 chmod 600 ~/.ssh/authorized_keys
 
 USER
+
+
+###############################################
+# Install needed packages for Edimax USB WiFi #
+###############################################
+# https://raspberrypi.stackexchange.com/questions/12946/set-up-edimax-ew-7811un-wifi-dongle
+# https://www.raspberrypi.org/forums/viewtopic.php?t=146592&p=971726
+# Do not disable WiFi after inactivity period
+# https://bbs.archlinux.org/viewtopic.php?pid=1512272#p1512272
+
+pacman --noconfirm --needed -S dkms-8192cu
 
 HERE
 
