@@ -27,7 +27,7 @@ if [ -z "$user" ] || ! contains "$available_users" "$user"; then
     echo "$available_users"
     exit 1
 fi
-user_password="$(pass server-passwords/"$host"/"$user" | xargs echo -n)"
+user_password="$(pass server-passwords/"$host"/"$user" | xargs -0 echo -n)"
 shift
 
 file="$1"
@@ -44,7 +44,14 @@ source "$file"
 arguments "$@"
 
 ssh "$user@$host" 'bash -s' <<EOF
+sudo -S bash << SUDO
+$user_password
+echo
+
 $(typeset -f run)
 set -x
+
 run "$@"
+
+SUDO
 EOF
