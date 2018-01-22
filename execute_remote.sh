@@ -5,8 +5,8 @@ contains() {
 }
 
 if ! ls ~/.password-store >/dev/null 2>&1; then
-    echo "Stopping swap and opening pass:"
-    sudo swapoff -a && pass open || exit 1
+    echo "Could not access ~/.password-store/, please open the pass tomb."
+    exit 1
 fi
 
 host="$1"
