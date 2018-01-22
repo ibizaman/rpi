@@ -18,19 +18,26 @@ install.
     
 **This will format the SD Card so you will lose everything that's on it.**
 
-This will ask you a few questions:
+Run without argument to see help.
+
+The needed arguments are:
 * what SD card you want to format,
 * what rpi model you want (1 and 2 supported),
 * what network profile (in `/etc/netctl/`) you want to install.
 
-Then it will proceed to:
+It will proceed to:
 * format the SD Card,
 * download the latest ArchLinuxARM iso from http://os.archlinuxarm.org/os/ (in
-  background while the formatting takes place),
+  background while the formatting takes place**,
 * untar the iso to the SD Card,
 * install needed packages to be able to chroot into the RPI,
 * and finally chroot in the RPI and update the packages through pacman.
 
+## Run scripts
+
+Apart from top-level scripts, all others are meant to be run through
+`./execute_local.sh` or `./execute_remote.sh`. Use the first if the SD Card is
+plugged in, otherwise use the second to ssh onto the RPI and run the script there.
 
 ## fileserver/
 
