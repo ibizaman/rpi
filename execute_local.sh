@@ -43,9 +43,18 @@ cd "$tmp_dir" || exit 1
 
 umount_device "$tmp_dir" "$device"
 mount_device "$tmp_dir" "$device"
+
 sudo arch-chroot "$tmp_dir"/root <<EOF
 $(typeset -f run)
+
 set -x
-run
+install_remote
+set +x
+
 EOF
+
+set -x
+install_local
+set +x
+
 umount_device "$tmp_dir" "$device"

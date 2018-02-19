@@ -5,7 +5,7 @@ function arguments() {
 }
 
 
-function run() {
+function install_remote() {
     pacman -Syu --noconfirm --needed \
         aria2 \
         git \
@@ -66,4 +66,8 @@ function run() {
     systemctl enable aria2web
 
     echo You can find the secret token in /opt/webui-aria2/configuration.js
+}
+
+function install_local() {
+    :
 }

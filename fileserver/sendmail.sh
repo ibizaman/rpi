@@ -32,7 +32,7 @@ function arguments() {
     [ -z "$smtp_password" ] && echo "Missing smtp_password for $domain" && exit 1
 }
 
-function run() {
+function install_remote() {
     [ -z "$smtp_hostname" ] && echo "Missing smtp_hostname for $domain" && exit 1
     pacman --needed --noconfirm -S \
         git \
@@ -71,4 +71,8 @@ ALIASES
 
     touch /var/log/msmtp.log
     chmod 666 /var/log/msmtp.log
+}
+
+function install_local() {
+    :
 }

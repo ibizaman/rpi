@@ -66,9 +66,14 @@ $user_password
 echo
 
 eval $(declare -p "${env_added[@]}")
-$(typeset -f run)
+$(typeset -f install_remote)
 
 set -x
-run
+install_remote
+set +x
 
 SUDO
+
+set -x
+install_local
+set +x

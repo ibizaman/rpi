@@ -5,7 +5,7 @@ function arguments() {
 }
 
 
-function run() {
+function install_remote() {
     pacman -Syu --noconfirm --needed \
         fontconfig \
         mediainfo \
@@ -60,4 +60,8 @@ function run() {
     systemctl enable ums
 
     echo add '/srv/*' to folders and folders_monitored in /opt/ums-6.8.0/UMS.conf
+}
+
+function install_local() {
+    :
 }
