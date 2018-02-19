@@ -9,6 +9,8 @@ if ! ls ~/.password-store >/dev/null 2>&1; then
     exit 1
 fi
 
+IFS=$'\n' read -rd '' -a env_before <<<"$(compgen -v)"
+
 host="$1"
 available_hosts="$(ls ~/.password-store/server-passwords)"
 if [ -z "$host" ] || ! contains "$available_hosts" "$host"; then
@@ -41,15 +43,30 @@ fi
 shift
 
 source "$file"
+
 arguments "$@"
+IFS=$'\n' read -rd '' -a env_after <<<"$(compgen -v)"
+
+env_added=()
+for i in "${env_after[@]}"; do
+    skip=
+    for j in "${env_before[@]}"; do
+        [[ $i == $j ]] && { skip=1; break; }
+    done
+    if [[ $i == "env_before" ]]; then
+        skip=1
+    fi
+    [[ -n $skip ]] || env_added+=("$i")
+done
 
 ssh "$user@$host" sudo -S bash << SUDO
 $user_password
 echo
 
+eval $(declare -p "${env_added[@]}")
 $(typeset -f run)
-set -x
 
-run "$@"
+set -x
+run
 
 SUDO

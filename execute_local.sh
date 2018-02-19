@@ -46,6 +46,6 @@ mount_device "$tmp_dir" "$device"
 sudo arch-chroot "$tmp_dir"/root <<EOF
 $(typeset -f run)
 set -x
-run "$@"
+run
 EOF
 umount_device "$tmp_dir" "$device"
