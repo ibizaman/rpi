@@ -43,8 +43,7 @@ shift
 source "$file"
 arguments "$@"
 
-ssh "$user@$host" 'bash -s' <<EOF
-sudo -S bash << SUDO
+ssh "$user@$host" sudo -S bash << SUDO
 $user_password
 echo
 
@@ -54,4 +53,3 @@ set -x
 run "$@"
 
 SUDO
-EOF
