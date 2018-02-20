@@ -63,6 +63,11 @@ if [ -z "$host" ]; then
     echo "$available_hosts"
     exit 1
 fi
+# This is needed at least for letsencrypt.
+if ! [[ "$host" =~ ^[0-9a-zA-Z.-]+$ ]]; then
+    echo "HOST can only contain numbers, letters and - and . characters."
+    exit 1
+fi
 shift
 
 ## USER
