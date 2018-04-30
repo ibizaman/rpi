@@ -1,9 +1,11 @@
+#!/bin/bash
+
 function arguments() {
     :
 }
 
 
-function run() {
+function install_remote() {
     pacman -Syu --noconfirm --needed \
         base-devel \
         cmake \
@@ -19,7 +21,7 @@ function run() {
         vim \
         || exit 1
 
-    cat <<FCRONTAB | fcrontab -
+    cat | fcrontab - <<FCRONTAB
     # * * * * *
     # | | | | |
     # | | | | +---- Day of the Week   (range: 1-7, 1 standing for Monday)
@@ -34,4 +36,9 @@ FCRONTAB
     systemctl start fcron
     systemctl enable fcron
 
+}
+
+
+function install_local() {
+    :
 }
