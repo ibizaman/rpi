@@ -272,7 +272,8 @@ systemctl enable sshd
 # Add user to wheel group #
 ###########################
 
-useradd -m -G wheel ${USER}
+useradd -m ${USER}
+usermod -aG wheel ${USER}
 passwd ${user} <<PASSWD
 ${user_password}
 ${user_password}
