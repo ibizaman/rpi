@@ -12,6 +12,7 @@ function install_remote() {
         fcron \
         git \
         mdadm \
+        miniupnpc \
         netctl \
         python \
         python-pip \
@@ -33,8 +34,34 @@ function install_remote() {
     !erroronlymail(true)
 FCRONTAB
 
-    systemctl start fcron
+    systemctl daemon-reload
+    systemctl restart fcron
     systemctl enable fcron
+
+
+    pip install --upgrade upnpport
+    useradd --system upnpport
+    cat > /etc/systemd/system/upnpport.service <<UPNPPORT
+[Unit]
+Description=UPnPPort service
+After=network.target
+
+[Service]
+User=upnpport
+Group=upnpport
+ExecStart=/usr/bin/upnpport run
+ExecReload=/bin/kill -s usr1 \$MAINPID
+
+[Install]
+WantedBy=default.target
+UPNPPORT
+
+    [ -d /etc/upnpport ] || mkdir /etc/upnpport
+    [ -f /etc/upnpport/upnpport.yaml ] || touch /etc/upnpport/upnpport.yaml
+
+    systemctl daemon-reload
+    systemctl restart upnpport
+    systemctl enable upnpport
 
 }
 
