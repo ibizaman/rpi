@@ -88,10 +88,55 @@ ARIA2WEBSERVICE
 
     chown -R aria2: /opt/webui-aria2
 
+    pip install --upgrade jsondispatch
+    useradd --system jsondispatch
+
+    cat > /etc/jsondispatch/jsondispatch.yaml <<YAML
+cors:
+  domain: '*'
+
+commands:
+  aria2:
+    url: http://127.0.0.1:6800/jsonrpc
+    rpc_secret: $aria2_secret
+
+triggers:
+  download_movie_uri:
+    - command: aria2
+      method: addUri
+      arguments:
+        url: \$url
+        dir: /srv/movies
+
+  download_serie_uri:
+    - command: aria2
+      method: addUri
+      arguments:
+        url: \$url
+        dir: /srv/series
+YAML
+
+    cat > /etc/systemd/system/jsondispatch.service <<JSONDISPATCH
+[Unit]
+Description=jsondispatch service
+After=network.target
+
+[Service]
+User=jsondispatch
+Group=jsondispatch
+ExecStart=/usr/bin/jsondispatch
+
+[Install]
+WantedBy=default.target
+JSONDISPATCH
+
+    systemctl daemon-reload
     systemctl restart aria2
     systemctl restart aria2web
+    systemctl restart jsondispatch
     systemctl enable aria2
     systemctl enable aria2web
+    systemctl enable jsondispatch
 
     echo You can find the secret token in /opt/webui-aria2/configuration.js
 }
