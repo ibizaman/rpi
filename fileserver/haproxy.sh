@@ -63,11 +63,6 @@ frontend  https
     # Listen on port 443, the default https port and fetch the
     # certificates inside the /etc/ssl/my_cert directory
     bind *:443 ssl crt /etc/ssl/my_cert/
-
-    default_backend default
-
-backend default
-    server default 127.0.0.1:8888
 HAPROXY
     fi
 
@@ -116,6 +111,8 @@ RENEW
     set +x
 
     fcrondyn -x ls | grep "$part" | cut -d ' ' -f 1 | xargs -I . fcrondyn -x "runnow ."
+
+    pip install --upgrade haproxysubdomains
 }
 
 function install_local() {
