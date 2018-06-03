@@ -34,8 +34,7 @@ function install_remote() {
     pacman --needed --noconfirm -S \
         fcron \
         python \
-        python-pip \
-        miniupnpc
+        python-pip
 
     pushd /opt
 
@@ -72,22 +71,14 @@ godaddy:
 /* vim: set ts=8 sw=4 tw=0 noet syn=yaml :*/
 MYIP
 
-    cat <<- PORTS > /etc/mFPN-organizer/network/ports.conf
-- port:     22
-  protocol: tcp
-PORTS
-
     part="/opt/mFPN-organizer/network/myip.py"
     line="@ 5  /opt/mFPN-organizer-venv/bin/python $part -c /etc/mFPN-organizer/network/myip.conf"
     if ! fcrontab -l 2>/dev/null | grep -q "$part"; then
         (fcrontab -l; echo "$line") | fcrontab -
     fi
 
-    part="/opt/mFPN-organizer/network/ports.py"
-    line="@ 5  /opt/mFPN-organizer-venv/bin/python /opt/mFPN-organizer/network/ports.py -c /etc/mFPN-organizer/network/ports.conf"
-    if ! fcrontab -l 2>/dev/null | grep -q "$part"; then
-        (fcrontab -l; echo "$line") | fcrontab -
-    fi
+    upnpport configure /etc/upnpport/upnpport.yaml add 22
+    systemctl reload upnpport
 
     popd
 }
