@@ -6,7 +6,7 @@ function arguments() {
         host="$1"
         available_hosts="$(ls ~/.password-store/server-passwords)"
         if [ -z "$host" ] || ! contains "$available_hosts" "$host"; then
-            echo "$help_args DOMAIN"
+            echo "$help_args DOMAIN ARIA2_DEFAULT_DOWNLOAD_PATH"
             echo "HOST must be one of:"
             echo "$available_hosts"
             exit 1
@@ -14,9 +14,19 @@ function arguments() {
         shift
     fi
 
+    domain="$1"
+    available_domains="$(ls -d ~/.password-store/mailgun.com/mg.* | xargs -n1 basename | cut -d '.' -f 2-)"
+    if [ -z "$domain" ] || ! contains "$available_domains" "$domain"; then
+        echo "$help_args DOMAIN ARIA2_DEFAULT_DOWNLOAD_PATH"
+        echo "DOMAIN must be one of:"
+        echo "$available_domains"
+        exit 1
+    fi
+    shift
+
     aria2_default_download_path="$1"
     if [ -z "$aria2_default_download_path" ]; then
-        echo "$help_args ARIA2_DEFAULT_DOWNLOAD_PATH"
+        echo "$help_args DOMAIN ARIA2_DEFAULT_DOWNLOAD_PATH"
         echo "ARIA2_DEFAULT_DOWNLOAD_PATH cannot be empty"
         exit 1
     fi
@@ -137,6 +147,14 @@ JSONDISPATCH
     systemctl enable aria2
     systemctl enable aria2web
     systemctl enable jsondispatch
+
+    # aria2web
+    haproxysubdomains add /etc/haproxy/haproxy.cfg https "$domain" aria2 8888
+    systemctl reload haproxy
+
+    # jsondispatch
+    upnpport configure /etc/upnpport/upnpport.yaml add 8850
+    systemctl reload upnpport
 
     echo You can find the secret token in /opt/webui-aria2/configuration.js
 }
