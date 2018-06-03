@@ -36,12 +36,12 @@ function install_remote() {
         python \
         python-pip
 
-    pushd /opt
+    pushd /opt || exit 1
 
     if ! [ -d mFPN-organizer ]; then
         git clone https://github.com/ibizaman/mFPN-organizer.git
     else
-        (cd mFPN-organizer; git pull)
+        (cd mFPN-organizer || exit 1; git pull)
     fi
 
     if ! [ -d mFPN-organizer-venv ]; then
@@ -80,7 +80,7 @@ MYIP
     upnpport configure /etc/upnpport/upnpport.yaml add 22
     systemctl reload upnpport
 
-    popd
+    popd || exit 1
 }
 
 function install_local() {

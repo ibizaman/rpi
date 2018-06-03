@@ -15,7 +15,7 @@ function install_remote() {
         || exit 1
 
 
-    cd /opt/
+    cd /opt/ || exit 1
 
     #[ -d tsmuxer-2.6.11 ] || curl -L -O https://www.deb-multimedia.org/pool/non-free/t/tsmuxer/tsmuxer_2.6.11.orig.tar.gz || exit 1
     #tar xf tsmuxer_2.6.11.orig.tar.gz
