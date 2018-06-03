@@ -40,22 +40,22 @@ function install_remote() {
 
     # From https://aur.archlinux.org/cgit/aur.git/tree/ums.service?h=ums
     cat > /etc/systemd/system/ums.service <<UMSSERVICE
-    [Unit]
-    Description=Universal Media Server
-    Wants=network.target
-    After=syslog.target network-online.target rpcbind.service
+[Unit]
+Description=Universal Media Server
+Wants=network.target
+After=syslog.target network-online.target rpcbind.service
 
-    [Service]
-    #Environment="UMS_MAX_MEMORY=1280M"
-    User=ums
-    Group=ums
-    WorkingDirectory=/opt/ums-6.8.0/
-    Type=simple
-    ExecStart=/opt/ums-6.8.0/UMS.sh
+[Service]
+#Environment="UMS_MAX_MEMORY=1280M"
+User=ums
+Group=ums
+WorkingDirectory=/opt/ums-6.8.0/
+Type=simple
+ExecStart=/opt/ums-6.8.0/UMS.sh
 
-    [Install]
-    WantedBy=multi-user.target
-    UMSSERVICE
+[Install]
+WantedBy=multi-user.target
+UMSSERVICE
 
     systemctl enable ums
 
