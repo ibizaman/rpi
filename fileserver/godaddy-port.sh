@@ -36,51 +36,34 @@ function install_remote() {
         python \
         python-pip
 
-    pushd /opt || exit 1
+    pip install --upgrade godaddyip
+    useradd --system godaddyip
+    cat > /etc/systemd/system/godaddyip.service <<GODADDYIP
+[Unit]
+Description=Godaddyip service
+After=network.target
 
-    if ! [ -d mFPN-organizer ]; then
-        git clone https://github.com/ibizaman/mFPN-organizer.git
-    else
-        (cd mFPN-organizer || exit 1; git pull)
-    fi
+[Service]
+User=godaddyip
+Group=godaddyip
+ExecStart=/usr/bin/godaddyip run
+ExecReload=/bin/kill -s usr1 \$MAINPID
 
-    if ! [ -d mFPN-organizer-venv ]; then
-        python -m venv mFPN-organizer-venv
-    fi
+[Install]
+WantedBy=default.target
+GODADDYIP
 
-    ./mFPN-organizer-venv/bin/pip install \
-        docopt \
-        PyYAML \
-        requests
+    godaddyip configure /etc/godaddyip/godaddyip.yaml key "$godaddy_key"
+    godaddyip configure /etc/godaddyip/godaddyip.yaml secret "$godaddy_secret"
+    godaddyip configure /etc/godaddyip/godaddyip.yaml arecord "$host"
+    godaddyip configure /etc/godaddyip/godaddyip.yaml domain "$domain"
 
-    mkdir -p /etc/mFPN-organizer/network
-    chmod 700 -R /etc/mFPN-organizer
-
-    cat <<- MYIP > /etc/mFPN-organizer/network/myip.conf
-ip:
-    upnpc: true
-    ipify: true
-
-godaddy:
-    enable:  true
-    name:    $host
-    key:     $godaddy_key
-    secret:  $godaddy_secret
-    domain:  $domain
-
-/* vim: set ts=8 sw=4 tw=0 noet syn=yaml :*/
-MYIP
-
-    part="/opt/mFPN-organizer/network/myip.py"
-    line="@ 5  /opt/mFPN-organizer-venv/bin/python $part -c /etc/mFPN-organizer/network/myip.conf"
-    if ! fcrontab -l 2>/dev/null | grep -q "$part"; then
-        (fcrontab -l; echo "$line") | fcrontab -
-    fi
+    systemctl daemon-reload
+    systemctl restart godaddyip
+    systemctl enable godaddyip
 
     upnpport configure /etc/upnpport/upnpport.yaml add 22
     systemctl reload upnpport
-
-    popd || exit 1
 }
 
 function install_local() {
