@@ -59,7 +59,9 @@ UMSSERVICE
 
     systemctl enable ums
 
-    echo add '/srv/*' to folders and folders_monitored in /opt/ums-6.8.0/UMS.conf
+    cp /opt/ums-6.8.0/UMS.conf /opt/ums-6.8.0/.config/UMS/UMS.conf
+
+    echo add individual folders in '/srv/' to folders and folders_monitored in /opt/ums-6.8.0/.config/UMS/UMS.conf
 }
 
 function install_local() {
