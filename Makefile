@@ -1,4 +1,4 @@
-.PHONY: help install-archlinux
+.PHONY: help install-archlinux install-mac
 
 
 help:  ## This help
@@ -15,3 +15,16 @@ install-archlinux:  ## Install needed packages on archlinux
 	    arch-install-scripts \
 	    binfmt-support \
 	    qemu-user-static
+
+
+# TODO: make ext4 work without paragon
+install-mac:
+	brew install \
+	    findutils \
+	    e2fsprogs \
+	    pv
+
+	brew cask install \
+	    paragon-extfs
+
+	open /usr/local/Caskroom/paragon-extfs/latest/FSInstaller.app

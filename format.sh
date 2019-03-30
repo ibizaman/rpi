@@ -25,7 +25,7 @@ usage() {
 
 ## DEVICE
 device="$1"
-available_devices=$(lsblk -rdo NAME | grep mmc)
+available_devices=$(get_available_devices)
 if [ -z "$device" ] || ! contains "$available_devices" "$device"; then
     usage
     echo "DEVICE must be one of:"
@@ -33,13 +33,13 @@ if [ -z "$device" ] || ! contains "$available_devices" "$device"; then
     exit 1
 fi
 device=/dev/"$device"
-device_boot=${device}p1
-device_root=${device}p2
+device_boot="$(device "$device" 1)"
+device_root="$(device "$device" 2)"
 shift
 
 ## MODEL
 model="$1"
-available_models=$(echo -e "rpi\nrpi2")
+available_models=$(echo -e "rpi\nrpi2\nrpi3")
 if [ -z "$model" ] || ! contains "$available_models" "$model"; then
     usage
     echo "MODEL must be one of:"
@@ -52,6 +52,11 @@ if [ "$model" = "rpi" ]; then
     filename='ArchLinuxARM-rpi-latest.tar.gz'
 elif [ "$model" = "rpi2" ]; then
     filename='ArchLinuxARM-rpi-2-latest.tar.gz'
+elif [ "$model" = "rpi3" ]; then
+    filename='ArchLinuxARM-rpi-2-latest.tar.gz'  # yes, 2 not 3
+else
+    echo "Unsupported model $model"
+    exit 1
 fi
 
 ## HOST
@@ -72,7 +77,7 @@ shift
 
 ## USER
 user="$1"
-available_users="$(ls ~/.password-store/server-passwords/"$host" | cut -d '.' -f 1)"
+available_users="$(ls ~/.password-store/server-passwords/"$host" 2>/dev/null | cut -d '.' -f 1)"
 if [ -z "$user" ]; then
     usage
     echo "INSTALL_USER can be one of, or a new one:"
@@ -82,15 +87,19 @@ fi
 shift
 
 ## NETWORK_PROFILE
-network_profile="$1"
-available_network_profiles=$(find /etc/netctl -maxdepth 1 -type f -printf '%f\n' | sort)
-if [ -z "$network_profile" ] || ! contains "$available_network_profiles" "$network_profile"; then
-    usage
-    echo "NETWORK_PROFILE must be one of:"
-    echo "$available_network_profiles"
-    exit 1
+if ! on_linux; then
+    echo "Creating network profile only support on linux OS"
+else
+    network_profile="$1"
+    available_network_profiles=$(find /etc/netctl -maxdepth 1 -type f -printf '%f\n' | sort)
+    if [ -z "$network_profile" ] || ! contains "$available_network_profiles" "$network_profile"; then
+        usage
+        echo "NETWORK_PROFILE must be one of:"
+        echo "$available_network_profiles"
+        exit 1
+    fi
+    shift
 fi
-shift
 
 # Fetching or creating user passwords for host stored in pass
 if ! contains "$available_users" "root"; then
@@ -101,9 +110,8 @@ else
 fi
 
 if ! contains "$available_users" "$user"; then
-    echo -n "Enter $user password for $host:"
-    read -r -s user_password
-    echo -e "$user_password\n$user_password" | pass insert "server-passwords/$host/$user"
+    echo "Generating new user password for $host"
+    user_password="$(pass generate "server-passwords/$host/$user" | tail -n1 | xargs -0 echo -n)"
 else
     user_password="$(pass "server-passwords/$host/$user" | xargs -0 echo -n)"
 fi
@@ -156,7 +164,9 @@ umount_device "$tmp_dir" "$device"
 
 # Partitioning RPI
 echo "Partitioning $device"
-sudo fdisk "$device" << STOP || exit 1
+
+if on_linux; then
+    sudo fdisk "$device" << STOP || exit 1
 p
 o
 n
@@ -174,12 +184,24 @@ p
 p
 w
 STOP
+elif on_mac; then
+    diskutil partitionDisk "$device" 2 MBR \
+            ExFAT boot 100M \
+            ExFAT root R \
+            || exit 1
+    umount_device "$tmp_dir" "$device"
+else
+    echo "OSTYPE $OSTYPE not supported"
+    exit 1
+fi
+
 
 
 # Formatting partitions
 echo "Formatting partitions."
-echo y | sudo mkfs.vfat "${device}p1" || exit 1
-echo y | sudo mkfs.ext4 "${device}p2" || exit 1
+# TODO: make ext4 work without paragon
+#format_vfat "$device_boot" || exit 1
+#format_ext4 "$device_root" || exit 1
 
 if [ $process -ne 0 ]; then
     echo "Waiting for download to finish."
@@ -188,15 +210,25 @@ fi
 
 mount_device "$tmp_dir" "$device"
 
+if on_linux; then
+    device_dir="$tmp_dir"
+elif on_mac; then
+    device_dir="/Volumes"
+fi
 
 # Copying Arch
 echo 'Untaring into root.'
-sudo sh -c "pv $filename | bsdtar -xpf - -C root" || exit 1
-sudo mv root/boot/* boot || exit 1
+sudo sh -c "pv $filename | bsdtar -xpf - -C $device_dir/root" || exit 1
+sudo mv "$device_dir/root/boot/*" "$device_dir/boot" || exit 1
 echo 'Running sync, can take a few minutes...'
 sync || exit 1
 
 set -x
+
+if ! on_linux; then
+    echo "Advanced operations only supported on linux"
+    exit 0
+fi
 
 # Allow to chroot
 sudo cp /usr/bin/qemu-arm-static /usr/bin/qemu-aarch64-static "$tmp_dir/root/usr/bin" || exit 1
