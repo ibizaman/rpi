@@ -35,7 +35,7 @@ user_password="$(pass server-passwords/"$host"/"$user" | xargs -0 echo -n)"
 shift
 
 file="$1"
-available_files="$(find * -mindepth 1 -type f -name '*.sh' | sort)"
+available_files="$(find . -mindepth 2 -type f -name '*.sh' -printf '%P\n' | sort)"
 if [ -z "$file" ] || ! contains "$available_files" "$file"; then
     echo "$help_args [ARG...]"
     echo "FILE must be one of:"

@@ -25,7 +25,7 @@ shift
 
 ## FILE
 file="$1"
-available_files="$(find * -mindepth 1 -type f -name '*.sh' | sort)"
+available_files="$(find . -mindepth 2 -type f -name '*.sh' -printf '%P\n' | sort)"
 if [ -z "$file" ] || ! contains "$available_files" "$file"; then
     echo "$0 HOST INSTALL_USER FILE [ARG...]"
     echo "FILE must be one of:"
