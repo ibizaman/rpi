@@ -1,7 +1,7 @@
 # RPI Installers
 
 This repository contains a bunch of scripts automating the installation of
-various things on a RPI 1 or 2.
+various things on a RPI 1, 2 and 3.
 
 
 ## Prerequisites
@@ -15,7 +15,7 @@ install.
 ## Format SD Card
 
 	./format.sh
-    
+
 **This will format the SD Card so you will lose everything that's on it.**
 
 Run without argument to see help.

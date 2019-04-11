@@ -5,33 +5,11 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source "$DIR/util.sh"
 
 
-# Script Arguments
+usage="$0 DEVICE FILE [NETWORK_PROFILE]"
 
-contains() {
-    [[ $1 =~ (^|[[:space:]])$2($|[[:space:]]) ]]
-}
-
-## DEVICE
-device="$1"
-available_devices=$(lsblk -rdo NAME | grep mmc)
-if [ -z "$device" ] || ! contains "$available_devices" "$device"; then
-    echo "$0 DEVICE"
-    echo "DEVICE must be one of:"
-    echo "$available_devices"
-    exit 1
-fi
-device=/dev/"$device"
+device="$(require_device "$1" "$usage")" || exit 1
 shift
-
-## FILE
-file="$1"
-available_files="$(find . -mindepth 2 -type f -name '*.sh' -printf '%P\n' | sort)"
-if [ -z "$file" ] || ! contains "$available_files" "$file"; then
-    echo "$0 HOST INSTALL_USER FILE [ARG...]"
-    echo "FILE must be one of:"
-    echo "$available_files"
-    exit 1
-fi
+file="$(require_file "$1" "$usage")" || exit 1
 shift
 
 source "$file"

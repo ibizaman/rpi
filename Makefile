@@ -8,23 +8,39 @@ help:  ## This help
 
 # See https://wiki.archlinux.org/index.php/Raspberry_Pi#QEMU_chroot
 install-archlinux:  ## Install needed packages on archlinux
-	pacaur -S \
+	sudo pacman -Sy --noconfirm --needed \
 	    curl \
-	    fdisk \
+	    util-linux \
 	    pv \
 	    arch-install-scripts \
-	    binfmt-support \
-	    qemu-user-static
+	    dosfstools \
+	    base-devel \
+
+	mkdir -p /tmp/rpi/builds && cd /tmp/rpi/builds
+	curl -L -O https://aur.archlinux.org/cgit/aur.git/snapshot/qemu-arm-static.tar.gz
+	tar -xvf qemu-arm-static.tar.gz
+	(cd qemu-arm-static && makepkg --needed --noconfirm -si)
 
 
-# TODO: make ext4 work without paragon
-install-mac:
+install-mac:  ## Install needed packages on mac
 	brew install \
 	    findutils \
 	    e2fsprogs \
 	    pv
 
-	brew cask install \
-	    paragon-extfs
+	brew install --head ./fuse-ext2.rb
 
-	open /usr/local/Caskroom/paragon-extfs/latest/FSInstaller.app
+	sudo cp -pR /usr/local/opt/fuse-ext2/System/Library/Filesystems/fuse-ext2.fs /Library/Filesystems/
+	sudo chown -R root:wheel /Library/Filesystems/fuse-ext2.fs
+
+	sudo cp -pR /usr/local/opt/fuse-ext2/System/Library/PreferencePanes/fuse-ext2.prefPane /Library/PreferencePanes/
+	sudo chown -R root:wheel /Library/PreferencePanes/fuse-ext2.prefPane
+
+
+install-mac-vagrant: install-mac  ## Install needed packages on mac for vagrant install
+	brew cask install \
+		virtualbox \
+		virtualbox-extension-pack \
+		vagrant
+
+	vagrant plugin install vagrant-scp
