@@ -23,10 +23,15 @@ install-archlinux:  ## Install needed packages on archlinux
 
 
 install-mac:  ## Install needed packages on mac
+	go get github.com/adamvduke/bcrypt-cli
+
 	brew install \
 	    findutils \
 	    e2fsprogs \
 	    pv
+
+	pip3 install --upgrade pip
+	pip3 install syncthingmanager
 
 	brew install --head ./fuse-ext2.rb
 

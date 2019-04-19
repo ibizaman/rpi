@@ -1,20 +1,15 @@
+#!/bin/bash
+
 function arguments() {
-    apikey_key="syncthing/$host/api_key"
-    apikey="$(pass $apikey_key)"
-    if [ -z "$apikey" ]; then
-        apikey="$(pass generate --no-symbols $apikey_key)"
-    fi
+    apikey="$(get_or_create_pass "syncthing/$host/api_key")"
     [ -z "$apikey" ] && "Could not find nor generate $apikey_key secret" && exit 1
 
     webuser=syncthing
     webaddress=0.0.0.0:8384
-    webpassword_key="syncthing/$host/web_password"
-    webpassword="$(pass $webpassword_key)"
-    if [ -z "$webpassword" ]; then
-        webpassword="$(pass generate --no-symbols $webpassword_key)"
-    fi
-    [ -z "$webpassword" ] && "Could not find nor generate $webpassword_key secret" && exit 1
-    webpassword="$(bcrypt-hash $webpassord -c 10)"
+    webpassword="$(get_or_create_pass "syncthing/$host/web_password")"
+    [ -z "$webpassword" ] && "Could not find nor generate $webpassword secret" && exit 1
+    webpassword_bcrypt="$(printf "%s\n" "$webpassword" "$webpassword" | bcrypt-cli hash -c 10 | tail -n1)"
+    echo "$webpassword_bcrypt"
 
     introducer="$(ls ~/.password-store/syncthing/introducer/ | sed -e 's/\.gpg$//')"
     introducer_id="$(pass syncthing/introducer/$introducer)"
@@ -25,11 +20,7 @@ function arguments() {
 function install_remote() {
     pacman -Syu --noconfirm --needed \
         syncthing \
-        python \
         || exit 1
-
-    pip3 install --upgrade pip
-    pip3 install --upgrade syncthingmanager
 
     useradd --create-home --home-dir /var/lib/syncthing syncthing
 
@@ -50,42 +41,36 @@ else
 fi
 
 if ! grep -q "<password>" .config/syncthing/config.xml; then
-    sed -i -e \$'s/\(\(^.*\)<\/gui>\)/\\\\2    <password>$webpassword<\/password>\\\n\\\\1/' .config/syncthing/config.xml
+    sed -i -e \$'s/\(\(^.*\)<\/gui>\)/\\\\2    <password>$webpassword_bcrypt<\/password>\\\n\\\\1/' .config/syncthing/config.xml
 else
-    sed -i -e "s/^\( *<password>\).*\(<\/password> *\)$/\1$webpassword\2/" .config/syncthing/config.xml
+    sed -i -e "s/^\( *<password>\).*\(<\/password> *\)$/\1$webpassword_bcrypt\2/" .config/syncthing/config.xml
 fi
-
-device_id="\$(cat .config/syncthing/config.xml | grep "$host" | sed -e 's/^.*id="\([^"]*\)".*$/\\1/')"
-set +x
-echo "Go to $introducer and add this device to it \$device_id."
 SYNCTHING
 
     systemctl daemon-reload
     systemctl restart syncthing@syncthing
     systemctl enable syncthing@syncthing
 
-    sleep 3
-
-    su - syncthing <<SYNCTHING
-set -x
-stman configure --apikey "$apikey" --name localhost --hostname 127.0.0.1 --default
-
-if stman folder info default | grep -q -v "not configure"; then
-    stman folder remove default
-fi
-
-if stman device info "$introducer" | grep -q "not configure"; then
-    stman device add --name "$introducer" --introducer "$introducer_id"
-fi
-SYNCTHING
+    upnpport configure /etc/upnpport/upnpport.yaml add 8384
+    systemctl reload upnpport
 }
 
 
 function install_local() {
-    pip3 install --upgrade pip
-    pip3 install --upgrade syncthingmanager
-    stman configure --apikey "$apikey" --name "$host" --hostname "$host" --default
+    pip3 install --upgrade pip || exit 1
+    pip3 install --upgrade syncthingmanager || exit 1
 
-    host_id="$(stman --device $host device info $host | grep ID | sed -e 's/^ *ID: *\([A-Z0-9-]*\)$/\1/')"
-    stman --device "$introducer" device add --name "$host" "$host_id"
+
+    stman configure --apikey "$apikey" --name "$host" --hostname "$host" --default || exit 1
+
+    if stman --device "$host" folder info default | grep -q -v "not configure"; then
+        stman --device "$host" folder remove default
+    fi
+
+    if stman --device "$host" device info "$introducer" | grep -q "not configure"; then
+        stman --device "$host" device add --name "$introducer" --introducer "$introducer_id"
+    fi
+
+    host_id="$(stman --device $host device info $host | grep ID | sed -e 's/^ *ID: *\([A-Z0-9-]*\)$/\1/')" || exit 1
+    stman --device "$introducer" device add --name "$host" "$host_id" || exit 1
 }
