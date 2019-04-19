@@ -9,8 +9,11 @@ usage="$0 HOST INSTALL_USER FILE [ARG...]"
 IFS=$'\n' read -rd '' -a env_before <<<"$(compgen -v)"
 
 host="$(require_host "$1" "$usage")" || exit 1
-user="$(require_user "$2" "$host" "$usage")" || exit 1
-file="$(require_file "$3" "$usage")" || exit 1
+shift
+user="$(require_user "$1" "$host" "$usage")" || exit 1
+shift
+file="$(require_file "$1" "$usage")" || exit 1
+shift
 user_password="$(pass server-passwords/"$host"/"$user" | xargs -0 echo -n)" || exit 1
 
 source "$file"

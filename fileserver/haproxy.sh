@@ -6,7 +6,7 @@ function arguments() {
         host="$1"
         available_hosts="$(ls ~/.password-store/server-passwords)"
         if [ -z "$host" ] || ! contains "$available_hosts" "$host"; then
-            echo "$help_args DOMAIN"
+            echo "$help_args HOST"
             echo "HOST must be one of:"
             echo "$available_hosts"
             exit 1
@@ -26,18 +26,33 @@ function arguments() {
 }
 
 function install_remote() {
-    pacman -Syu --noconfirm --needed \
+    pip3 uninstall --yes pbr
+
+    pacman -Sy --noconfirm --needed \
         certbot \
-        fcron \
         haproxy \
         || exit 1
+
+    pip3 install pbr
 
     mkdir -p /etc/haproxy/plugins/haproxy-acme-validation-plugin-0.1.1
     curl -o /etc/haproxy/plugins/haproxy-acme-validation-plugin-0.1.1/acme-http01-webroot.lua \
          https://raw.githubusercontent.com/janeczku/haproxy-acme-validation-plugin/master/acme-http01-webroot.lua
 
-    if [ -f /etc/haproxy/haproxy.cfg ]; then
-        cat << HAPROXY > /etc/haproxy/haproxy.cfg
+    sed 's|\["non_chroot_webroot"\] = .*$|["non_chroot_webroot"] = "/var/lib/haproxy"|' \
+        -i /etc/haproxy/plugins/haproxy-acme-validation-plugin-0.1.1/acme-http01-webroot.lua
+
+    mkdir -p /etc/systemd/system/haproxy.service.d/
+    cat <<SERVICE > /etc/systemd/system/haproxy.service.d/10-env_configs.conf
+[Service]
+Environment="CONFIG=/etc/haproxy/configs"
+SERVICE
+
+    mkdir -p /etc/haproxy/configs
+    mkdir -p /var/lib/haproxy
+    chown haproxy: /var/lib/haproxy
+
+    cat << HAPROXY > /etc/haproxy/configs/00-global.cfg
 global
     # Load the plugin handling Let's Encrypt request
     lua-load /etc/haproxy/plugins/haproxy-acme-validation-plugin-0.1.1/acme-http01-webroot.lua
@@ -46,25 +61,51 @@ global
     # instead of the default 1024 makes the connection stronger.
     tune.ssl.default-dh-param  2048
 
-frontend  http
-    # Listen on the port 80 for incoming requests, without restriction on
-    # incoming ips
+    maxconn 20000
+
+    user haproxy
+    group haproxy
+
+    log /dev/log local0 info
+
+
+defaults
+    log global
+    option httplog
+
+    timeout connect         10s
+    timeout client          1m
+    timeout server          1m
+
+
+frontend http-to-https
+    mode http
+    bind *:80
+    redirect scheme https code 301 if !{ ssl_fc }
+HAPROXY
+
+    cat << HAPROXY > /etc/haproxy/configs/10-acme-challenge.cfg
+frontend acme-challenge
+    mode http
+
     bind *:80
 
-    # Matches all requests where the path is /.well-known/acme-challenge/
-    # This match can be referred to using the name url_acme_http01 for the rest
-    # of the configuration
-    acl url_acme_http01  path_beg       /.well-known/acme-challenge/
+    acl url_acme_http01 path_beg /.well-known/acme-challenge/
 
-    # All GET requests matching the acl above are handled by the plugin
     http-request use-service lua.acme-http01 if METH_GET url_acme_http01
-
-frontend  https
-    # Listen on port 443, the default https port and fetch the
-    # certificates inside the /etc/ssl/my_cert directory
-    bind *:443 ssl crt /etc/ssl/my_cert/
 HAPROXY
-    fi
+
+    # Example configuration with https:
+    #
+    #    frontend  https
+    #        # Listen on port 443, the default https port and fetch the
+    #        # certificates inside the /etc/ssl/my_cert directory
+    #        bind *:443 ssl crt /etc/ssl/my_cert/
+    #
+    #        default_backend default
+    #
+    #    backend default
+    #        server default 127.0.0.1:8888
 
     cat << RENEW > /usr/local/bin/haproxy-ssl-renew
 #!/bin/bash
@@ -80,6 +121,7 @@ LE_OUTPUT=/etc/letsencrypt/live
 
 # Directory where the certificates will be stored for haproxy to find them
 DEST_DIR="/etc/ssl/my_cert/"
+mkdir -p "\$DEST_DIR"
 
 # Concat the requested domains
 DOMAINS=""
@@ -100,11 +142,11 @@ done
 RENEW
     chmod a+x /usr/local/bin/haproxy-ssl-renew
 
-    systemctl restart haproxy
+    systemctl reload-or-restart haproxy
     systemctl enable haproxy
 
     part="/usr/local/bin/haproxy-ssl-renew $host.$domain"
-    line="10 4 1 */3 * /usr/local/bin/haproxy-ssl-renew $host.$domain"
+    line="@ 2m /usr/local/bin/haproxy-ssl-renew $host.$domain"
     if ! fcrontab -l 2>/dev/null | grep -q "$part"; then
         (fcrontab -l; echo "$line") | fcrontab -
     fi
@@ -112,7 +154,9 @@ RENEW
 
     fcrondyn -x ls | grep "$part" | cut -d ' ' -f 1 | xargs -I . fcrondyn -x "runnow ."
 
-    pip install --upgrade haproxysubdomains
+    upnpport configure /etc/upnpport/upnpport.yaml add 80
+    upnpport configure /etc/upnpport/upnpport.yaml add 443
+    systemctl reload upnpport
 }
 
 function install_local() {
