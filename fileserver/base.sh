@@ -1,11 +1,19 @@
 #!/bin/bash
 
 function arguments() {
-    :
+    root_password="$(pass server-passwords/"$host"/root | xargs -0 echo -n)"
+    user_password="$(pass server-passwords/"$host"/"$user" | xargs -0 echo -n)"
+
+    user_ssh_pubkey="$(get_or_create_ssh_key "$host" "$user")" || exit 1
 }
 
 
 function install_remote() {
+    echo "Update system"
+
+    pacman-key --init || exit 1
+    pacman-key --populate archlinuxarm || exit 1
+    pacman -Sy --noconfirm --needed archlinuxarm-keyring || exit 1
     pacman -Syu --noconfirm --needed \
         base-devel \
         cmake \
@@ -14,6 +22,7 @@ function install_remote() {
         mdadm \
         miniupnpc \
         netctl \
+        ntp \
         python \
         python-pip \
         python2 \
@@ -21,6 +30,71 @@ function install_remote() {
         tmux \
         vim \
         || exit 1
+
+
+    echo "Install ntp"
+
+    systemctl enable ntpd
+
+
+    echo "Generate locale"
+
+    sed -i 's/#\(en_US.UTF-8\)/\1/' /etc/locale.gen
+    locale-gen
+    echo "LANG=en_US.UTF-8" > /etc/locale.conf
+
+
+    echo "Store hostname"
+
+    echo "$host" > /etc/hostname
+    grep -q -F "127.0.0.1	$host.localdomain	$host" /etc/hosts || echo -e "127.0.0.1\t$host.localdomain\t$host" >> /etc/hosts
+
+
+    echo "Root password"
+
+    passwd <<PASSWD
+${root_password}
+${root_password}
+PASSWD
+
+
+    echo "Sshd without password connections"
+
+    pacman --noconfirm --needed -S openssh
+    #sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
+    systemctl enable sshd
+
+
+    echo "Add user to wheel group"
+
+    useradd -m "$user"
+    usermod -aG wheel "$user"
+    passwd "$user" <<PASSWD
+${user_password}
+${user_password}
+PASSWD
+
+
+    echo "Add wheel group to sudoers"
+
+    pacman --noconfirm --needed -S sudo
+    sed -i 's/# \(%wheel ALL=(ALL) ALL\)/\1/' /etc/sudoers
+
+
+    echo "Allow remote access"
+
+    su "$user" << USER
+set -x
+
+mkdir -p ~/.ssh
+chmod 700 ~/.ssh
+grep -q -F "${user_ssh_pubkey}" ~/.ssh/authorized_keys || echo ${user_ssh_pubkey} >> ~/.ssh/authorized_keys
+chmod 600 ~/.ssh/authorized_keys
+
+USER
+
+
+    echo "Install fcron"
 
     cat | fcrontab - <<-FCRONTAB
 # * * * * *
@@ -38,6 +112,8 @@ FCRONTAB
     systemctl restart fcron
     systemctl enable fcron
 
+
+    echo "Install upnpport"
 
     pip install --upgrade upnpport
     useradd --system upnpport
