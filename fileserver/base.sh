@@ -1,6 +1,14 @@
 #!/bin/bash
 
 function arguments() {
+    usage="$usage SSH_HOST SSH_USER SSH_PASSWORD"
+    ssh_host="$(require_host "$1" "$usage")" || exit 1
+    shift
+    ssh_user="$(require_user "$1" "$ssh_host" "$usage")" || exit 1
+    shift
+    ssh_password="$1"
+    shift
+
     root_password="$(pass server-passwords/"$host"/root | xargs -0 echo -n)"
     user_password="$(pass server-passwords/"$host"/"$user" | xargs -0 echo -n)"
 

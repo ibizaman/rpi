@@ -4,17 +4,20 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=./util.sh disable=SC1091
 source "$DIR/util.sh"
 
-usage="$0 HOST INSTALL_USER FILE [ARG...]"
+usage="$0 HOST INSTALL_USER FILE"
 
 IFS=$'\n' read -rd '' -a env_before <<<"$(compgen -v)"
 
 host="$(require_host "$1" "$usage")" || exit 1
+ssh_host="$host"
 shift
 user="$(require_user "$1" "$host" "$usage")" || exit 1
+ssh_user="$user"
 shift
 file="$(require_file "$1" "$usage")" || exit 1
 shift
 user_password="$(pass server-passwords/"$host"/"$user" | xargs -0 echo -n)" || exit 1
+ssh_password="$user_password"
 
 source "$file"
 
@@ -33,8 +36,8 @@ for i in "${env_after[@]}"; do
     [[ -n $skip ]] || env_added+=("$i")
 done
 
-ssh "$user@$host" sudo -S bash << SUDO
-$user_password
+ssh "$ssh_user@$ssh_host" sudo -S bash << SUDO
+$ssh_password
 echo
 
 eval $(declare -p "${env_added[@]}")
