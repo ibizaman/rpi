@@ -70,7 +70,7 @@ user="$(require_user "$4" "$host" "$usage")" || exit 1
 root_password="$(get_or_create_password "$host" root)" || exit 1
 user_password="$(get_or_create_password "$host" "$user")" || exit 1
 
-user_ssh_pubkey="$(get_or_create_ssh_key "$host" "$user")" || exit 1
+user_ssh_pubkey="$(get_or_create_ssh_key "$(hostname)" "$host" "$user")" || exit 1
 
 
 echogreen "Halting Vagrant"
@@ -144,6 +144,7 @@ echogreen "SSHING into VM"
 vagrant ssh -- -t <<EOF
 $(typeset -f echogreen)
 
+export RPI_HOSTNAME="$(hostname)"
 export RPI_PASSWORD_ROOT="$root_password"
 export RPI_PASSWORD_USER="$user_password"
 export RPI_SSH_KEY="$user_ssh_pubkey"

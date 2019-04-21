@@ -31,7 +31,7 @@ network_profile="$(require_network_profile "$5" "$usage")"
 
 root_password="$(get_or_create_password "$host" root)" || exit 1
 user_password="$(get_or_create_password "$host" "$user" "$RPI_PASSWORD_USER")" || exit 1
-user_ssh_pubkey="$(get_or_create_ssh_key "$host" "$user")" || exit 1
+user_ssh_pubkey="$(get_or_create_ssh_key "$(hostname)" "$host" "$user")" || exit 1
 
 
 download_archlinux "$model" "$filename"

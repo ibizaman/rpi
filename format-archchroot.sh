@@ -23,7 +23,7 @@ network_profile="$(require_network_profile "$3" "$usage")"
 
 root_password="$(get_or_create_password "$host" root "$RPI_PASSWORD_ROOT")" || exit 1
 user_password="$(get_or_create_password "$host" "$user" "$RPI_PASSWORD_USER")" || exit 1
-user_ssh_pubkey="$(get_or_create_ssh_key "$host" "$user" "$RPI_SSH_KEY")" || exit 1
+user_ssh_pubkey="$(get_or_create_ssh_key "$RPI_HOSTNAME" "$host" "$user" "$RPI_SSH_KEY")" || exit 1
 
 umount_device "$tmp_dir" "$device"
 mount_device "$tmp_dir" "$device"

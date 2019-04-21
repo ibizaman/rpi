@@ -1,7 +1,9 @@
 #!/bin/bash
 
 function arguments() {
-    usage="$usage SSH_HOST SSH_USER SSH_PASSWORD"
+    usage="$usage THIS_HOST SSH_HOST SSH_USER SSH_PASSWORD"
+    this_host="$(require_host "$1" "$usage")" || exit 1
+    shift
     ssh_host="$(require_host "$1" "$usage")" || exit 1
     shift
     ssh_user="$(require_user "$1" "$ssh_host" "$usage")" || exit 1
@@ -12,7 +14,7 @@ function arguments() {
     root_password="$(pass server-passwords/"$host"/root | xargs -0 echo -n)"
     user_password="$(pass server-passwords/"$host"/"$user" | xargs -0 echo -n)"
 
-    user_ssh_pubkey="$(get_or_create_ssh_key "$host" "$user")" || exit 1
+    user_ssh_pubkey="$(get_or_create_ssh_key "$this_host" "$host" "$user")" || exit 1
 }
 
 
@@ -69,7 +71,6 @@ PASSWD
     echo "Sshd without password connections"
 
     pacman --noconfirm --needed -S openssh
-    #sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
     systemctl enable sshd
 
 
@@ -151,5 +152,7 @@ UPNPPORT
 
 
 function install_local() {
+    echo "Now try to log in without password, on success, run on the server:"
+    echo "sudo sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config"
     :
 }

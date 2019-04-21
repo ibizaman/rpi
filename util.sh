@@ -229,17 +229,18 @@ function get_or_create_pass() {
 }
 
 function get_or_create_ssh_key() {
-    local host="$1"
-    local user="$2"
-    local key="$3"
+    local localhost="$1"
+    local host="$2"
+    local user="$3"
+    local key="$4"  # optional
     local private_key="$HOME/.ssh/$host-$user"
     local public_key="$private_key.pub"
     if [ -n "$key" ]; then
         echo "$key"
         exit 0
-    else
-        pass generate --force "sshkey-passphrase/$host-$user" >/dev/null
-        local user_ssh_passphrase="$(pass show "sshkey-passphrase/$host-$user" | xargs -0 echo -n)"
+    elif [ ! -f "$private_key" ] || [ ! -f "$public_key" ]; then
+        pass generate --force "sshkey-passphrase/$localhost/$host-$user" >/dev/null
+        local user_ssh_passphrase="$(pass show "sshkey-passphrase/$localhost/$host-$user" | xargs -0 echo -n)"
 
         if [ -z "$user_ssh_passphrase" ]; then
             echoerr "Failed to create passphrase, aborting."
