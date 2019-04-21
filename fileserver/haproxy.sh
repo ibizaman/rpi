@@ -68,15 +68,26 @@ global
 
     log /dev/log local0 info
 
-
 defaults
     log global
     option httplog
 
-    timeout connect         10s
-    timeout client          1m
-    timeout server          1m
+    timeout connect  10s
+    timeout client   1m
+    timeout server   1m
+    timeout queue    100s
 
+listen stats
+    bind             :14567
+    mode             http
+    maxconn          10
+
+    stats enable
+    stats hide-version
+    stats refresh    30s
+    stats show-node
+    stats auth       admin:sekret
+    stats uri        /haproxy?stats
 
 frontend http-to-https
     mode http
