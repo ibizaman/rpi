@@ -37,7 +37,7 @@ function install_remote() {
         python-pip
 
     pip install --upgrade godaddyip
-    useradd --system godaddyip
+    useradd --system --create-home --home-dir /var/lib/godaddyip godaddyip
     cat > /etc/systemd/system/godaddyip.service <<GODADDYIP
 [Unit]
 Description=Godaddyip service
@@ -53,10 +53,12 @@ ExecReload=/bin/kill -s usr1 \$MAINPID
 WantedBy=default.target
 GODADDYIP
 
+    set +x
     godaddyip configure /etc/godaddyip/godaddyip.yaml key "$godaddy_key"
     godaddyip configure /etc/godaddyip/godaddyip.yaml secret "$godaddy_secret"
     godaddyip configure /etc/godaddyip/godaddyip.yaml arecord "$host"
     godaddyip configure /etc/godaddyip/godaddyip.yaml domain "$domain"
+    set -x
 
     systemctl daemon-reload
     systemctl restart godaddyip
