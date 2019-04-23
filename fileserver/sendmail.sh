@@ -71,6 +71,8 @@ ALIASES
 
     touch /var/log/msmtp.log
     chmod 666 /var/log/msmtp.log
+
+    echo "hello there username." | msmtp -a default ibizapeanut@gmail.com
 }
 
 function install_local() {
