@@ -159,7 +159,8 @@ function require_user() {
 function get_users() {
     local host="$1"
     ls ~/.password-store/server-passwords/"$host" 2>/dev/null \
-        | cut -d '.' -f 1
+        | cut -d '.' -f 1 \
+        | cut -d '@' -f 1
 }
 
 function require_network_profile() {
@@ -202,12 +203,12 @@ function get_or_create_password() {
         echo "$pw"
     elif ! contains "$(get_users "$host")" "$user"; then
         echoerr "Generating new password for $user in host $host"
-        pass generate "server-passwords/$host/$user" \
+        pass generate "server-passwords/$host/$user@$host" \
             | tail -n1 \
             | xargs -0 echo -n \
             || exit 1
     else
-        pass "server-passwords/$host/$user" \
+        pass "server-passwords/$host/$user@$host" \
             | xargs -0 echo -n \
             || exit 1
     fi

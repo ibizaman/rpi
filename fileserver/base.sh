@@ -11,8 +11,8 @@ function arguments() {
     ssh_password="$1"
     shift
 
-    root_password="$(pass server-passwords/"$host"/root | xargs -0 echo -n)"
-    user_password="$(pass server-passwords/"$host"/"$user" | xargs -0 echo -n)"
+    root_password="$(pass server-passwords/"$host/root@$host" | xargs -0 echo -n)"
+    user_password="$(pass server-passwords/"$host/$user@$host" | xargs -0 echo -n)"
 
     user_ssh_pubkey="$(get_or_create_ssh_key "$this_host" "$host" "$user")" || exit 1
 }

@@ -16,7 +16,7 @@ ssh_user="$user"
 shift
 file="$(require_file "$1" "$usage")" || exit 1
 shift
-user_password="$(pass server-passwords/"$host"/"$user" | xargs -0 echo -n)" || exit 1
+user_password="$(pass server-passwords/"$host/$user@$host" | xargs -0 echo -n)" || exit 1
 ssh_password="$user_password"
 
 source "$file"
