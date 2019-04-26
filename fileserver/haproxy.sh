@@ -23,6 +23,8 @@ function arguments() {
         exit 1
     fi
     shift
+
+    haproxy_webroot=/var/lib/haproxy
 }
 
 function install_remote() {
@@ -39,7 +41,7 @@ function install_remote() {
     curl -o /etc/haproxy/plugins/haproxy-acme-validation-plugin-0.1.1/acme-http01-webroot.lua \
          https://raw.githubusercontent.com/janeczku/haproxy-acme-validation-plugin/master/acme-http01-webroot.lua
 
-    sed 's|\["non_chroot_webroot"\] = .*$|["non_chroot_webroot"] = "/var/lib/haproxy"|' \
+    sed 's|\["non_chroot_webroot"\] = .*$|["non_chroot_webroot"] = "$haproxy_webroot"|' \
         -i /etc/haproxy/plugins/haproxy-acme-validation-plugin-0.1.1/acme-http01-webroot.lua
 
     mkdir -p /etc/systemd/system/haproxy.service.d/
@@ -49,8 +51,8 @@ Environment="CONFIG=/etc/haproxy/configs"
 SERVICE
 
     mkdir -p /etc/haproxy/configs
-    mkdir -p /var/lib/haproxy
-    chown haproxy: /var/lib/haproxy
+    mkdir -p "$haproxy_webroot"
+    chown haproxy: "$haproxy_webroot"
 
     cat << HAPROXY > /etc/haproxy/configs/00-global.cfg
 global
@@ -143,7 +145,7 @@ done
 
 # Create or renew certificate for the domain(s) supplied for this tool
 # The parenthesis make the script run in a subshell, this is needed so it doesn't mangle \$@
-(\$LE_TOOL certonly --text --agree-tos --renew-by-default --webroot --webroot-path /usr/share/haproxy -m ibizapeanut@gmail.com \$DOMAINS)
+(\$LE_TOOL certonly --text --agree-tos --renew-by-default --webroot --webroot-path $haproxy_webroot -m ibizapeanut@gmail.com \$DOMAINS)
 
 # Merge and copy the certificates to the destination directory
 for DOM in "\$@"
