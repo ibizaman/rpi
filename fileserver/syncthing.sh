@@ -24,6 +24,7 @@ function install_remote() {
 
     useradd --create-home --home-dir /var/lib/syncthing syncthing
 
+    # TODO: we could move all sed lines out of the heredoc
     su - syncthing <<SYNCTHING
 set -x
 if ! [ -d .config/syncthing ]; then
@@ -46,6 +47,26 @@ else
     sed -i -e "s/^\( *<password>\).*\(<\/password> *\)$/\1$webpassword_bcrypt\2/" .config/syncthing/config.xml
 fi
 SYNCTHING
+
+    cat <<HAPROXY > /etc/haproxy/configs/40-syncthing.cfg
+frontend syncthing
+    mode http
+
+    bind *:443 ssl crt /etc/ssl/my_cert/
+    reqadd X-Forwarded-Proto:\ https
+
+    acl acl_syncthing path_beg /syncthing
+    use_backend syncthing if acl_syncthing
+
+backend syncthing
+    mode http
+
+    option forwardfor
+
+    reqrep ^([^\ :]*)\ /syncthing/?(.*)     \1\ /\2
+
+    server syncthing1 127.0.0.1:8384
+HAPROXY
 
     systemctl daemon-reload
     systemctl restart syncthing@syncthing
