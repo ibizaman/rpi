@@ -32,7 +32,6 @@ function install_remote() {
         mdadm \
         miniupnpc \
         netctl \
-        ntp \
         python \
         python-pip \
         python2 \
@@ -42,9 +41,11 @@ function install_remote() {
         || exit 1
 
 
-    echo "Install ntp"
+    echo "Install systemd-timesyncd"
 
-    systemctl enable ntpd
+    systemctl start systemd-timesyncd
+    systemctl enable systemd-timesyncd
+    timedatectl set-ntp true
 
 
     echo "Generate locale"
