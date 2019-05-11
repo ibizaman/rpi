@@ -70,6 +70,8 @@ global
 
     log /dev/log local0 info
 
+    stats socket 127.0.0.1:14567
+
 defaults
     log global
     option httplog
@@ -78,18 +80,6 @@ defaults
     timeout client   1m
     timeout server   1m
     timeout queue    100s
-
-listen stats
-    bind             :14567
-    mode             http
-    maxconn          10
-
-    stats enable
-    stats hide-version
-    stats refresh    30s
-    stats show-node
-    stats auth       admin:sekret
-    stats uri        /haproxy?stats
 
 frontend http-to-https
     mode http
