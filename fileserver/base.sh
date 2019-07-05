@@ -68,6 +68,7 @@ function install_remote() {
 
     echo "$host" > /etc/hostname
     grep -q -F "127.0.0.1	$host.localdomain	$host" /etc/hosts || echo -e "127.0.0.1\t$host.localdomain\t$host" >> /etc/hosts
+    grep -q -F "127.0.0.1	$host.tiserbox.com	$host" /etc/hosts || echo -e "127.0.0.1\t$host.tiserbox.com\t$host" >> /etc/hosts
 
 
     echo "Root password"
