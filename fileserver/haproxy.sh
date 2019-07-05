@@ -41,7 +41,7 @@ function install_remote() {
     curl -o /etc/haproxy/plugins/haproxy-acme-validation-plugin-0.1.1/acme-http01-webroot.lua \
          https://raw.githubusercontent.com/janeczku/haproxy-acme-validation-plugin/master/acme-http01-webroot.lua
 
-    sed 's|\["non_chroot_webroot"\] = .*$|["non_chroot_webroot"] = "$haproxy_webroot"|' \
+    sed "s|\[\"non_chroot_webroot\"\] = .*$|[\"non_chroot_webroot\"] = \"$haproxy_webroot\"|" \
         -i /etc/haproxy/plugins/haproxy-acme-validation-plugin-0.1.1/acme-http01-webroot.lua
 
     mkdir -p /etc/systemd/system/haproxy.service.d/
