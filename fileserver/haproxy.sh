@@ -28,14 +28,20 @@ function arguments() {
 }
 
 function install_remote() {
-    pip3 uninstall --yes pbr
+    install_pbr=false
+    if pip3 freeze | grep pbr; then
+        install_pbr=true
+        pip3 uninstall --yes pbr
+    fi
 
     pacman -Sy --noconfirm --needed \
         certbot \
         haproxy \
         || exit 1
 
-    pip3 install pbr
+    if [ "$install_pbr" = true ]; then
+        pip3 install pbr
+    fi
 
     mkdir -p /etc/haproxy/plugins/haproxy-acme-validation-plugin-0.1.1
     curl -o /etc/haproxy/plugins/haproxy-acme-validation-plugin-0.1.1/acme-http01-webroot.lua \
