@@ -62,7 +62,7 @@ cd "$tmp_dir" || exit 1
 
 usage="$0 DEVICE MODEL HOST USER"
 
-device="$(require_device "$1" "$usage")" || exit 1
+device="$(require_device_sdcard "$1" "$usage")" || exit 1
 model="$(require_model "$2" "$usage")" || exit 1
 host="$(require_host "$3" "$usage")" || exit 1
 user="$(require_user "$4" "$host" "$usage")" || exit 1

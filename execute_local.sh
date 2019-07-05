@@ -7,7 +7,7 @@ source "$DIR/util.sh"
 
 usage="$0 DEVICE FILE [NETWORK_PROFILE]"
 
-device="$(require_device "$1" "$usage")" || exit 1
+device="$(require_device_sdcard "$1" "$usage")" || exit 1
 shift
 file="$(require_file "$1" "$usage")" || exit 1
 shift

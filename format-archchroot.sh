@@ -15,7 +15,7 @@ cd "$tmp_dir" || exit 1
 
 usage="$0 DEVICE HOST USER [NETWORK_PROFILE]"
 
-device="$(require_device "$1" "$usage")" || exit 1
+device="$(require_device_sdcard "$1" "$usage")" || exit 1
 host="$(require_host "$1" "$usage")" || exit 1
 user="$(require_user "$2" "$host" "$usage")" || exit 1
 

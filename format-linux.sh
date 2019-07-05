@@ -16,7 +16,7 @@ cd "$tmp_dir" || exit 1
 usage="$0 DEVICE MODEL HOST USER [NETWORK_PROFILE]"
 
 
-device="$(require_device "$1" "$usage")" || exit 1
+device="$(require_device_sdcard "$1" "$usage")" || exit 1
 device_boot="$(get_device_boot "$device")"
 device_root="$(get_device_root "$device")"
 
@@ -34,7 +34,7 @@ user_password="$(get_or_create_password "$host" "$user" "$RPI_PASSWORD_USER")" |
 user_ssh_pubkey="$(get_or_create_ssh_key "$(hostname)" "$host" "$user")" || exit 1
 
 
-download_archlinux "$model" "$filename"
+download_archlinux_arm "$model" "$filename"
 process="$?"
 
 

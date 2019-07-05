@@ -16,14 +16,14 @@ cd "$tmp_dir" || exit 1
 
 usage="$0 DEVICE MODEL"
 
-device="$(require_device "$1" "$usage")" || exit 1
+device="$(require_device_sdcard "$1" "$usage")" || exit 1
 device_root="$(get_device_root "$device")"
 
 model="$(require_model "$2" "$usage")" || exit 1
 filename="$(get_arch_filename "$model")"
 
 
-download_archlinux "$model" "$filename"
+download_archlinux_arm "$model" "$filename"
 process="$?"
 
 umount_device "$tmp_dir" "$device"

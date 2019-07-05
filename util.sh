@@ -30,7 +30,7 @@ function echoerr() {
     printf "\e[31m$cmd: %s\e[0m\n" "$*" >&2
 }
 
-function require_device() {
+function require_device_sdcard() {
     local device="$1"
     local usage="$2"
     local available_devices=$(get_available_devices)
@@ -259,7 +259,7 @@ function get_or_create_ssh_key() {
     xargs -0 echo -n < "$public_key"
 }
 
-function download_archlinux() {
+function download_archlinux_arm() {
     local model="$1"
     local filename="$2"
 
