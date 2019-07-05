@@ -9,7 +9,6 @@ function arguments() {
     webpassword="$(get_or_create_pass "syncthing/$host/web_password")"
     [ -z "$webpassword" ] && "Could not find nor generate $webpassword secret" && exit 1
     webpassword_bcrypt="$(printf "%s\n" "$webpassword" "$webpassword" | bcrypt-cli hash -c 10 | tail -n1)"
-    echo "$webpassword_bcrypt"
 
     introducer="$(ls ~/.password-store/syncthing/introducer/ | sed -e 's/\.gpg$//')"
     introducer_id="$(pass syncthing/introducer/$introducer)"
