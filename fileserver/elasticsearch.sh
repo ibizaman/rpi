@@ -27,8 +27,10 @@ function install_remote() {
     chown elasticsearch: /var/lib/elasticsearch
     cat <<ELASTICSEARCH > /etc/elasticsearch/elasticsearch.yml
 cluster.name: $domain
+discovery.type: single-node
 path.data: /var/lib/elasticsearch
 http.port: 9201
+network.host: [_local_, _site_]
 ELASTICSEARCH
 
     cat <<EOF > /etc/default/elasticsearch
