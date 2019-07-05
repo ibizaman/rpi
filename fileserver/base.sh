@@ -36,6 +36,7 @@ function install_remote() {
         python-pip \
         python2 \
         python2-pip \
+        smartmontools \
         tmux \
         vim \
         || exit 1
@@ -46,6 +47,14 @@ function install_remote() {
     systemctl start systemd-timesyncd
     systemctl enable systemd-timesyncd
     timedatectl set-ntp true
+
+
+    echo "Install smart monitoring"
+
+    sed -i 's/^DEVICESCAN$/DEVICESCAN -m ibizapeanut@gmail.com/' /etc/smartd.conf
+
+    systemctl start smartd
+    systemctl enable smartd
 
 
     echo "Generate locale"
