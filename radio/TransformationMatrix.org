@@ -1,0 +1,85 @@
+This document explains how one can convert from the old Calibrations
+Xorg option to the new TransformationMatrix. It provides an automated
+computation of the c0-4 values through an org-table.
+
+TODO: tangle automatically the 99-calibration.conf file.
+
+
+* Explanation
+
+From https://wiki.archlinux.org/index.php/Calibrating_Touchscreen
+And https://github.com/swkim01/waveshare-dtoverlays#touch-calibration
+And running `xinput_calibration`
+
+Having:
+
+INFO: width=480, height=320
+current calibration values: min_x=0, max_x=65535 and min_y=0, max_y=65535
+
+Option	"MinX"	"63009"
+Option	"MaxX"	"4574"
+Option	"MinY"	"5018"
+Option	"MaxY"	"60722"
+
+c0 = touch_area_width / total_width
+   = (MaxX - MinX) / 65535
+   = (4574 - 63009) / 65535
+   = -0.8916609445
+
+c2 = touch_area_height / total_height
+   = (MaxY - MinY) / 65535
+   = (60722 - 5018) / 65535
+   = 0.8499885557
+
+c1 = touch_area_x_offset / total_width
+   = MinX / 65535
+   = 63009 / 65535
+   = 0.9614557107
+
+c3 = touch_area_y_offset / total_height
+   = MinY / 65535
+   = 5018 / 65535
+   = 0.07656977188
+
+| c0 |  0 | c1 |
+|  0 | c2 | c3 |
+|  0 |  0 | 1  |
+
+| c0 | 0 | c1 | 0 | c2 | c3 | 0 | 0 | 1 |
+
+
+* Computation
+
+|       MinX |      MaxX |      MinY |         MaxY |   Max |
+|------------+-----------+-----------+--------------+-------|
+|      70535 |     -4000 |     -6000 |        70535 | 65535 |
+|------------+-----------+-----------+--------------+-------|
+|         c0 |        c1 |        c2 |           c3 |       |
+|------------+-----------+-----------+--------------+-------|
+| -1.1373312 | 1.0762951 | 1.1678492 | -0.091554131 |       |
+#+TBLFM: @4$1=(@2$2 - @2$1) / @2$5::@4$2=@2$1 / @2$5::@4$3=(@2$4 - @2$3) / @2$5::@4$4=@2$3 / @2$5
+
+#+NAME:c0
+#+BEGIN_SRC emacs-lisp
+
+#+END_SRC
+
+#+BEGIN_SRC bash
+DISPLAY=:0 xinput list
+#+END_SRC
+
+#+BEGIN_SRC bash
+DISPLAY=:0 xinput set-prop '<device name>' \
+    'Coordinate Transformation Matrix' <matrix in row-order>
+#+END_SRC
+
+
+* File Tangling
+
+#+BEGIN_SRC conf :dir /ssh:timusic|sudo:root@timusic:/usr/share/X11/xorg.conf.d :tangle 99-calibration.conf :var c0=c0,c1=c1,c2=c2,c3=c3
+Section "InputClass"
+        Identifier      "calibration"
+        MatchProduct    "ADS7846 Touchscreen"
+        Option	"TransformationMatrix"	"$c0 0 $c1 0 $c2 $c3 0 0 1"
+EndSection
+#+END_SRC
