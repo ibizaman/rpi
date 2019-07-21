@@ -102,6 +102,44 @@ backend kibana
     server kibana1 127.0.0.1:5602
 HAPROXY
 
+    cat <<EOF > /usr/local/bin/clean-elasticsearch.sh
+#!/bin/bash
+
+function dates {
+    curl --silent http://localhost:9201/_cat/indices | \\
+        grep -e "\$1" | \\
+        cut -f3 -d' ' | \\
+        cut --output-delimiter=' ' -f1- -d '-' | \\
+        sort -n -k4
+}
+
+function keep {
+    head -n -\$1
+}
+
+function del {
+    while IFS= read -r data; do
+        index=\$(echo "\$data" | cut --output-delimiter='-' -f1- -d ' ')
+        echo deleting "\$index"
+        curl -XDELETE http://localhost:9201/"\$index"
+    done
+}
+
+dates metricbeat-arsenic | keep 5 | del
+dates metricbeat-timusic | keep 5 | del
+
+dates journalbeat-arsenic | keep 5 | del
+dates journalbeat-timusic | keep 5 | del
+EOF
+    chmod a+x /usr/local/bin/clean-elasticsearch.sh
+    part="/usr/local/bin/clean-elasticsearch.sh"
+    line="@ 1d /usr/local/bin/clean-elasticsearch.sh"
+    if ! fcrontab -l 2>/dev/null | grep -q "$part"; then
+        (fcrontab -l; echo "$line") | fcrontab -
+    fi
+
+    fcrondyn -x ls | grep "$part" | cut -d ' ' -f 1 | xargs -I . fcrondyn -x "runnow ."
+
     systemctl daemon-reload
 
     systemctl reload-or-restart haproxy
