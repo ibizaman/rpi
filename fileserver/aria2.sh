@@ -52,7 +52,7 @@ function install_remote() {
 
     git clone https://github.com/ziahamza/webui-aria2.git || (cd webui-aria2 && git pull)
 
-    sed -i "s|// token: '\$YOUR_SECRET_TOKEN\$'|  token: '$aria2_secret'|" /opt/webui-aria2/configuration.js
+    sed -i "s|// token: '\$YOUR_SECRET_TOKEN\$'|  token: '$aria2_secret'|" /opt/webui-aria2/src/js/services/configuration.js
 
     groupadd --system downloader
     useradd --create-home --home-dir /var/lib/aria2 --groups downloader aria2
@@ -75,7 +75,14 @@ After=network.target
 [Service]
 User=aria2
 Group=aria2
-ExecStart=/usr/bin/aria2c --enable-rpc --rpc-listen-all --rpc-allow-origin-all --save-session /var/lib/aria2/session.lock --input-file /var/lib/aria2/session.lock --conf-path=/etc/aria2/aria2.conf
+ExecStart=/usr/bin/aria2c \\
+              --enable-rpc \\
+              --rpc-listen-all \\
+              --rpc-allow-origin-all \\
+              --interface=tun0 \\
+              --save-session /var/lib/aria2/session.lock \\
+              --input-file /var/lib/aria2/session.lock \\
+              --conf-path=/etc/aria2/aria2.conf
 
 [Install]
 WantedBy=default.target
@@ -156,7 +163,7 @@ JSONDISPATCH
     upnpport configure /etc/upnpport/upnpport.yaml add 8850
     systemctl reload upnpport
 
-    echo You can find the secret token in /opt/webui-aria2/configuration.js
+    echo You can find the secret token in /opt/webui-aria2/src/js/services/configuration.js
 }
 
 function install_local() {
