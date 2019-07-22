@@ -62,6 +62,9 @@ ARIA2
 
     mkdir -p /etc/aria2
 
+    mkdir -p "$aria2_default_download_path"
+    chown aria2:aria2 "$aria2_default_download_path"
+
     cat > /etc/aria2/aria2.conf <<ARIA2CONF
 dir=$aria2_default_download_path
 rpc-secret=$aria2_secret
