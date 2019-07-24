@@ -181,24 +181,6 @@ ARIA2ROUTEDOWN
 
     systemctl restart openvpn-client@privateinternetaccess
 
-#    cat > /etc/systemd/system/elm-torrent.service <<ELMTORRENT
-#[Unit]
-#Description=Elm Torrent
-#After=network.target
-#
-#[Service]
-#User=elm-torrent
-#Group=elm-torrent
-#WorkingDirectory=/opt/elm-torrent
-#ExecStart=/usr/bin/node /opt/elm-torrent/node-server.js
-#
-#[Install]
-#WantedBy=default.target
-#ELMTORRENT
-
-#    chown -R elm-torrent: /opt/elm-torrent
-#    useradd --home-dir /opt/elm-torrent elm-torrent
-
 
     systemctl daemon-reload
     systemctl restart aria2
