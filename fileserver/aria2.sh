@@ -44,18 +44,22 @@ function arguments() {
 function install_remote() {
     pacman -Syu --noconfirm --needed \
         aria2 \
+        darkhttpd \
         git \
-        nodejs \
+        unzip \
         || exit 1
-
-    cd /opt/ || exit 1
 
     if ! grep aria2 /etc/iproute2/rt_tables; then
         echo -e "\n10 aria2" >> /etc/iproute2/rt_tables
     fi
 
-    git clone https://github.com/ziahamza/webui-aria2.git || (cd webui-aria2 && git pull)
-    sed -i "s|// token: '\$YOUR_SECRET_TOKEN\$'|  token: '$aria2_secret'|" /opt/webui-aria2/src/js/services/configuration.js
+
+    cd /opt/ || exit 1
+    curl -L -O https://github.com/mayswind/AriaNg/releases/download/1.1.1/AriaNg-1.1.1.zip
+    if ! [ -d AriaNg-1.1.1 ]; then
+        unzip AriaNg-1.1.1.zip -d AriaNg-1.1.1
+    fi
+    chown -R aria2: AriaNg-1.1.1
 
     groupadd --system downloader
     useradd --create-home --home-dir /var/lib/aria2 --groups downloader aria2
@@ -84,6 +88,7 @@ Group=aria2
 ExecStart=/usr/bin/aria2c \\
               --enable-rpc \\
               --rpc-allow-origin-all \\
+              --rpc-listen-port=6801 \\
               --async-dns=false  \\
               --interface=tun0 \\
               --bt-lpd-interface wlan0 \\
@@ -104,12 +109,27 @@ After=network.target
 [Service]
 User=aria2
 Group=aria2
-WorkingDirectory=/opt/webui-aria2
-ExecStart=/usr/bin/node /opt/webui-aria2/node-server.js
+WorkingDirectory=/opt/AriaNg-1.1.1
+ExecStart=/usr/bin/darkhttpd . --port 6810
 
 [Install]
 WantedBy=default.target
 ARIA2WEBSERVICE
+
+    cat > /etc/systemd/system/aria2files.service <<ARIA2FILESSERVICE
+[Unit]
+Description=Aria2 Files Service
+After=network.target
+
+[Service]
+User=aria2
+Group=aria2
+WorkingDirectory=$aria2_default_download_path
+ExecStart=/usr/bin/darkhttpd . --port 6811
+
+[Install]
+WantedBy=default.target
+ARIA2FILESSERVICE
 
     chown -R aria2: /opt/webui-aria2
 
@@ -225,9 +245,11 @@ JSONDISPATCH
     systemctl restart aria2
     systemctl restart aria2web
     systemctl restart jsondispatch
+    systemctl restart aria2files
     systemctl enable aria2
     systemctl enable aria2web
     systemctl enable jsondispatch
+    systemctl enable aria2files
 
     # aria2web
     haproxysubdomains add /etc/haproxy/haproxy.cfg https "$domain" aria2 8888
