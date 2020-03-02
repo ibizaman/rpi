@@ -60,7 +60,7 @@ frontend elasticsearch
     mode http
 
     bind *:9200 ssl crt /etc/ssl/my_cert/
-    reqadd X-Forwarded-Proto:\ https
+    http-request add-header X-Forwarded-Proto https
 
     default_backend elasticsearch
 
@@ -85,7 +85,7 @@ frontend kibana
     mode http
 
     bind *:443 ssl crt /etc/ssl/my_cert/
-    reqadd X-Forwarded-Proto:\ https
+    http-request add-header X-Forwarded-Proto https
 
     acl acl_kibana path_beg /kibana
     use_backend kibana if acl_kibana
@@ -97,7 +97,7 @@ backend kibana
 
     acl AuthOkay_KibanaUsersAuth http_auth(KibanaUsersAuth)
     http-request auth realm UserAuth if !AuthOkay_KibanaUsersAuth
-    reqrep ^([^\ :]*)\ /kibana/(.*) \1\ /\2
+    http-request replace-path ^([^\ :]*)\ /kibana/(.*) \1\ /\2
 
     server kibana1 127.0.0.1:5602
 HAPROXY

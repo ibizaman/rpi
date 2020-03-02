@@ -52,7 +52,7 @@ frontend syncthing
     mode http
 
     bind *:443 ssl crt /etc/ssl/my_cert/
-    reqadd X-Forwarded-Proto:\ https
+    http-request add-header X-Forwarded-Proto https
 
     acl acl_syncthing path_beg /syncthing
     use_backend syncthing if acl_syncthing
@@ -62,7 +62,7 @@ backend syncthing
 
     option forwardfor
 
-    reqrep ^([^\ :]*)\ /syncthing/?(.*)     \1\ /\2
+    http-request replace-path ^([^\ :]*)\ /syncthing/?(.*)     \1\ /\2
 
     server syncthing1 127.0.0.1:8384
 HAPROXY
