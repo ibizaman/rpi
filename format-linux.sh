@@ -74,7 +74,7 @@ untar_and_copy_arch "$filename" "$tmp_dir"
 export RPI_PASSWORD_ROOT="$root_password"
 export RPI_PASSWORD_USER="$user_password"
 export RPI_SSH_KEY="$user_ssh_pubkey"
-./format-archchroot.sh "$host" "$user" "$network_profile"
+"$DIR/format-archchroot.sh" "$device" "$host" "$user" "$network_profile"
 
 # Done
 umount_device "$tmp_dir" "$device"

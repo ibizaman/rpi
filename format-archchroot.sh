@@ -16,10 +16,10 @@ cd "$tmp_dir" || exit 1
 usage="$0 DEVICE HOST USER [NETWORK_PROFILE]"
 
 device="$(require_device_sdcard "$1" "$usage")" || exit 1
-host="$(require_host "$1" "$usage")" || exit 1
-user="$(require_user "$2" "$host" "$usage")" || exit 1
+host="$(require_host "$2" "$usage")" || exit 1
+user="$(require_user "$3" "$host" "$usage")" || exit 1
 
-network_profile="$(require_network_profile "$3" "$usage")"
+network_profile="$(require_network_profile "$4" "$usage")"
 
 root_password="$(get_or_create_password "$host" root "$RPI_PASSWORD_ROOT")" || exit 1
 user_password="$(get_or_create_password "$host" "$user" "$RPI_PASSWORD_USER")" || exit 1
@@ -36,8 +36,6 @@ if [ -n "$network_profile" ]; then
     sudo sh -c "cp /etc/netctl/$network_profile $tmp_dir/root/etc/netctl/$network_profile" || exit 1
 fi
 
-df -h
-mount
 echoyellow "Chrooting into $tmp_dir/root"
 sudo arch-chroot "$tmp_dir/root" /bin/bash <<HERE
 $(typeset -f echoyellow)
