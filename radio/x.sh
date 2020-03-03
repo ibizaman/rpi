@@ -5,12 +5,14 @@ function arguments() {
 }
 
 function install_remote() {
+	pacman --noconfirm -Syu || exit 1
     pacman --noconfirm --needed -Sy \
            xf86-video-fbturbo \
-           xorg-input \
+           xorg-xinput \
            xorg-server \
            xorg-xclock \
            xorg-xinit \
+		   || exit 1
 
     #############
     # Autologin #
