@@ -201,13 +201,13 @@ function get_or_create_password() {
     local pw="$3"
     if [ -n "$pw" ]; then
         echo "$pw"
-    elif ! contains "$(get_users "$host")" "$user"; then
-        echoerr "Generating new password for $user in host $host"
-        pass generate "server-passwords/$host/$user@$host" \
-            | tail -n1 \
-            | xargs -0 echo -n \
-            || exit 1
     else
+        if ! contains "$(get_users "$host")" "$user"; then
+            echoerr "Generating new password for $user in host $host"
+            pass generate "server-passwords/$host/$user@$host" >/dev/null \
+                || exit 1
+        fi
+
         pass "server-passwords/$host/$user@$host" \
             | xargs -0 echo -n \
             || exit 1
