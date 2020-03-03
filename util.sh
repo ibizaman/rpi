@@ -78,7 +78,7 @@ function device() {
     local partition="$2"
 
     if on_linux; then
-        echo "${device}${partition}"
+        echo "${device}p${partition}"
     elif on_mac; then
         echo "${device}s${partition}"
     else
