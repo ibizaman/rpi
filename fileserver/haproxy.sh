@@ -162,7 +162,7 @@ RENEW
     systemctl enable haproxy
 
     part="/usr/local/bin/haproxy-ssl-renew $host.$domain"
-    line="@ 2m /usr/local/bin/haproxy-ssl-renew $host.$domain"
+    line="@ 2m /usr/local/bin/haproxy-ssl-renew $host.$domain && systemctl reload haproxy"
     if ! fcrontab -l 2>/dev/null | grep -q "$part"; then
         (fcrontab -l; echo "$line") | fcrontab -
     fi
