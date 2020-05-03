@@ -100,7 +100,6 @@ frontend acme-challenge
     bind *:80
 
     acl url_acme_http01 path_beg /.well-known/acme-challenge/
-
     http-request use-service lua.acme-http01 if METH_GET url_acme_http01
 HAPROXY
 
@@ -111,6 +110,9 @@ HAPROXY
     #        # certificates inside the /etc/ssl/my_cert directory
     #        bind *:443 ssl crt /etc/ssl/my_cert/
     #
+    #        acl url_acme_http01 path_beg /.well-known/acme-challenge/
+    #        http-request use-service lua.acme-http01 if METH_GET url_acme_http01
+	#
     #        default_backend default
     #
     #    backend default
@@ -132,6 +134,11 @@ LE_OUTPUT=/etc/letsencrypt/live
 DEST_DIR="/etc/ssl/my_cert/"
 mkdir -p "\$DEST_DIR"
 
+if [ "$1" = "-n" ]; then
+	DRY_RUN="--test-cert --dry-run"
+	shift
+fi
+
 # Concat the requested domains
 DOMAINS=""
 for DOM in "\$@"
@@ -141,7 +148,7 @@ done
 
 # Create or renew certificate for the domain(s) supplied for this tool
 # The parenthesis make the script run in a subshell, this is needed so it doesn't mangle \$@
-(\$LE_TOOL certonly --text --agree-tos --renew-by-default --webroot --webroot-path $haproxy_webroot -m ibizapeanut@gmail.com \$DOMAINS)
+(\$LE_TOOL certonly $DRY_RUN --text --agree-tos --renew-by-default --webroot --webroot-path $haproxy_webroot -m ibizapeanut@gmail.com \$DOMAINS)
 
 # Merge and copy the certificates to the destination directory
 for DOM in "\$@"
